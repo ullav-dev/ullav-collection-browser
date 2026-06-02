@@ -25,7 +25,7 @@ Use `text-teal-600`, `bg-teal-600`, `hover:bg-teal-700`, `focus:ring-teal-500` f
 
 | Service | Local port | Proxy path |
 |---|---|---|
-| `ullav-collection-server` | 8082 | `/api/*` |
+| `ullav-collection-server` | 8084 | `/api/*` |
 | `ullav-user-management` | 8081 | `/auth-api/*` |
 
 API rewrites configured in `src/proxy.ts` (Next.js 16's replacement for `middleware.ts`).

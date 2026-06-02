@@ -10,7 +10,7 @@ function route(request: NextRequest): NextResponse {
 
   // Proxy /api/* → ullav-collection-server (strips /api prefix)
   if (pathname.startsWith("/api/")) {
-    const apiUrl = process.env.API_URL ?? "http://localhost:8082";
+    const apiUrl = process.env.API_URL ?? "http://localhost:8084";
     return NextResponse.rewrite(
       new URL(pathname.slice("/api".length) + search, apiUrl)
     );
