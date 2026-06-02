@@ -4,11 +4,12 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { listObjects, type CollectionObject } from "@/lib/collection-api";
+import { exportJson, exportCsv, exportLido } from "@/lib/export";
 import dynamic from "next/dynamic";
 import type { LabelObject } from "@/lib/label-generator";
 
-// Dynamically import the modal so jsPDF/bwip-js don't end up in the initial bundle
 const LabelPrintModal = dynamic(() => import("@/components/LabelPrintModal"), { ssr: false });
+const ImportModal = dynamic(() => import("@/components/ImportModal"), { ssr: false });
 
 function statusBadge(status: string) {
   const colours: Record<string, string> = {
@@ -42,10 +43,19 @@ export default function ObjectsPage() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) router.replace("/login");
   }, [isLoading, user, router]);
+
+  useEffect(() => {
+    if (!showExportMenu) return;
+    const close = () => setShowExportMenu(false);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [showExportMenu]);
 
   const fetchObjects = useCallback(async () => {
     if (!token) return;
@@ -97,15 +107,55 @@ export default function ObjectsPage() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <h1 className="text-xl font-bold text-slate-800">Collection Objects</h1>
-        <Link
-          href="/objects/new"
-          className="inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Add object
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* Export dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowExportMenu(v => !v)}
+              disabled={objects.length === 0}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-800 border border-slate-200 hover:border-slate-300 px-3 py-2 rounded-lg transition-colors disabled:opacity-40"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Export
+              <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            {showExportMenu && (
+              <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl border border-slate-200 shadow-lg py-1 z-20">
+                {[
+                  { label: "JSON", action: () => exportJson(objects) },
+                  { label: "CSV (Spectrum)", action: () => exportCsv(objects) },
+                  { label: "LIDO XML", action: () => exportLido(objects, "Cartlann Collection") },
+                ].map(({ label, action }) => (
+                  <button key={label} type="button" onClick={() => { action(); setShowExportMenu(false); }}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Import */}
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-800 border border-slate-200 hover:border-slate-300 px-3 py-2 rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            Import
+          </button>
+          <Link
+            href="/objects/new"
+            className="inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Add object
+          </Link>
+        </div>
       </div>
 
       <div className="mb-4">
@@ -225,6 +275,14 @@ export default function ObjectsPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {showImportModal && token && (
+        <ImportModal
+          token={token}
+          onClose={() => setShowImportModal(false)}
+          onComplete={() => { setShowImportModal(false); fetchObjects(); }}
+        />
       )}
 
       {showPrintModal && (
