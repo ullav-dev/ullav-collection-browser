@@ -105,6 +105,9 @@ export default function Nav() {
                       <DropdownLink href="/parties" onClick={() => setDropdownOpen(false)}>
                         Parties
                       </DropdownLink>
+                      <DropdownLink href="/settings" onClick={() => setDropdownOpen(false)}>
+                        Settings
+                      </DropdownLink>
                       <div className="my-1 border-t border-slate-100" />
                       <DropdownButton onClick={handleLogout} destructive>
                         Sign out

@@ -346,3 +346,44 @@ export const createObjectLoan = (token: string, objectId: string, body: Partial<
 
 export const updateLoan = (token: string, id: string, body: Partial<Loan>): Promise<Loan> =>
   apiRequest(`/loans/${id}`, token, { method: "PUT", body: JSON.stringify(body) });
+
+// ── Number schemes ────────────────────────────────────────────────────────────
+
+export interface NumberScheme {
+  id: string;
+  name: string;
+  institution_code: string | null;
+  format_template: string;
+  prefix: string | null;
+  seq_padding: number;
+  last_sequence: number;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NumberSchemePreview {
+  next_number: string;
+  next_sequence: number;
+}
+
+export const listNumberSchemes = (token: string): Promise<NumberScheme[]> =>
+  apiRequest("/settings/number-schemes", token);
+
+export const getNumberScheme = (token: string, id: string): Promise<NumberScheme> =>
+  apiRequest(`/settings/number-schemes/${id}`, token);
+
+export const createNumberScheme = (token: string, body: Partial<NumberScheme>): Promise<NumberScheme> =>
+  apiRequest("/settings/number-schemes", token, { method: "POST", body: JSON.stringify(body) });
+
+export const updateNumberScheme = (token: string, id: string, body: Partial<NumberScheme>): Promise<NumberScheme> =>
+  apiRequest(`/settings/number-schemes/${id}`, token, { method: "PUT", body: JSON.stringify(body) });
+
+export const previewNumberScheme = (token: string, id: string): Promise<NumberSchemePreview> =>
+  apiRequest(`/settings/number-schemes/${id}/preview`, token);
+
+export const assignAccession = (token: string, objectId: string, schemeId?: string): Promise<{ accession_number: string }> =>
+  apiRequest(`/objects/${objectId}/assign-accession`, token, {
+    method: "POST",
+    body: JSON.stringify({ scheme_id: schemeId ?? null }),
+  });
