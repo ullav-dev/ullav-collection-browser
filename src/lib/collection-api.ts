@@ -31,14 +31,68 @@ export interface CollectionObject {
   title: string;
   accession_number: string | null;
   object_name: string | null;
-  description: string | null;
+  brief_description: string | null;
+  object_type: string | null;
+  maker: string | null;
   date_from: number | null;
   date_to: number | null;
   date_precision: string | null;
   materials: string[];
   dimensions: Record<string, unknown> | null;
+  current_location_id: string | null;
+  current_condition: string | null;
+  rights_holder: string | null;
+  copyright_status: string | null;
   status: string;
   is_accessioned: boolean;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConditionCheck {
+  id: string;
+  object_id: string;
+  check_date: string;
+  checked_by: string;
+  condition_grade: string;
+  notes: string | null;
+  next_check_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConservationTreatment {
+  id: string;
+  object_id: string;
+  treatment_type: string;
+  start_date: string;
+  end_date: string | null;
+  conservator_id: string | null;
+  description: string | null;
+  cost: number | null;
+  currency: string | null;
+  outcome: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Loan {
+  id: string;
+  object_id: string;
+  loan_type: string;
+  counterpart_id: string | null;
+  purpose: string | null;
+  start_date: string;
+  expected_end_date: string | null;
+  actual_end_date: string | null;
+  status: string;
+  venue: string | null;
+  insurance_value: number | null;
+  insurance_currency: string | null;
+  courier_details: string | null;
+  conditions_text: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -115,16 +169,23 @@ export interface Acquisition {
 export interface CreateObjectRequest {
   title: string;
   object_name?: string;
-  description?: string;
+  brief_description?: string;
+  object_type?: string;
+  maker?: string;
   date_from?: number;
   date_to?: number;
   date_precision?: string;
   materials?: string[];
   dimensions?: Record<string, unknown>;
-  status?: string;
+  current_condition?: string;
+  rights_holder?: string;
+  copyright_status?: string;
+  is_public?: boolean;
 }
 
-export interface UpdateObjectRequest extends Partial<CreateObjectRequest> {}
+export interface UpdateObjectRequest extends CreateObjectRequest {
+  status: string;
+}
 
 export interface ObjectListQuery {
   search?: string;
@@ -233,3 +294,55 @@ export const getAcquisition = (token: string, id: string): Promise<Acquisition> 
 
 export const createAcquisition = (token: string, body: Partial<Acquisition>): Promise<Acquisition> =>
   apiRequest("/acquisitions", token, { method: "POST", body: JSON.stringify(body) });
+
+// ── Condition checks ──────────────────────────────────────────────────────────
+
+export const listConditionChecks = (token: string, objectId: string): Promise<ConditionCheck[]> =>
+  apiRequest(`/objects/${objectId}/condition-checks`, token);
+
+export const getLatestConditionCheck = (token: string, objectId: string): Promise<ConditionCheck | null> =>
+  apiRequest(`/objects/${objectId}/condition-checks/latest`, token);
+
+export const createConditionCheck = (
+  token: string,
+  objectId: string,
+  body: { check_date: string; condition_grade: string; notes?: string; next_check_date?: string }
+): Promise<ConditionCheck> =>
+  apiRequest(`/objects/${objectId}/condition-checks`, token, { method: "POST", body: JSON.stringify(body) });
+
+// ── Conservation treatments ───────────────────────────────────────────────────
+
+export const listTreatments = (token: string, objectId: string): Promise<ConservationTreatment[]> =>
+  apiRequest(`/objects/${objectId}/treatments`, token);
+
+export const createTreatment = (
+  token: string,
+  objectId: string,
+  body: Partial<ConservationTreatment>
+): Promise<ConservationTreatment> =>
+  apiRequest(`/objects/${objectId}/treatments`, token, { method: "POST", body: JSON.stringify(body) });
+
+export const updateTreatment = (token: string, id: string, body: Partial<ConservationTreatment>): Promise<ConservationTreatment> =>
+  apiRequest(`/treatments/${id}`, token, { method: "PUT", body: JSON.stringify(body) });
+
+// ── Loans ─────────────────────────────────────────────────────────────────────
+
+export const listLoans = (token: string, query?: { loan_type?: string; status?: string }): Promise<Loan[]> => {
+  const params = new URLSearchParams();
+  if (query?.loan_type) params.set("loan_type", query.loan_type);
+  if (query?.status) params.set("status", query.status);
+  const qs = params.toString();
+  return apiRequest(`/loans${qs ? `?${qs}` : ""}`, token);
+};
+
+export const getLoan = (token: string, id: string): Promise<Loan> =>
+  apiRequest(`/loans/${id}`, token);
+
+export const listObjectLoans = (token: string, objectId: string): Promise<Loan[]> =>
+  apiRequest(`/objects/${objectId}/loans`, token);
+
+export const createObjectLoan = (token: string, objectId: string, body: Partial<Loan>): Promise<Loan> =>
+  apiRequest(`/objects/${objectId}/loans`, token, { method: "POST", body: JSON.stringify(body) });
+
+export const updateLoan = (token: string, id: string, body: Partial<Loan>): Promise<Loan> =>
+  apiRequest(`/loans/${id}`, token, { method: "PUT", body: JSON.stringify(body) });

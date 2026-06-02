@@ -85,8 +85,8 @@ export default function BrowsePage() {
               {obj.object_name && (
                 <p className="text-xs text-teal-600 font-medium mb-1">{obj.object_name}</p>
               )}
-              {obj.description && (
-                <p className="text-xs text-slate-500 line-clamp-2 mb-2">{obj.description}</p>
+              {obj.brief_description && (
+                <p className="text-xs text-slate-500 line-clamp-2 mb-2">{obj.brief_description}</p>
               )}
               <div className="flex items-center gap-2 mt-3 flex-wrap">
                 {objectDateLabel(obj) && (
