@@ -121,6 +121,7 @@ export interface Location {
   id: string;
   code: string;
   name: string;
+  description: string | null;
   parent_id: string | null;
   location_type: string;
   is_active: boolean;
@@ -146,6 +147,9 @@ export interface ObjectEntry {
   entry_date: string;
   reason: string;
   depositor_id: string | null;
+  brief_description: string | null;
+  expected_return_date: string | null;
+  actual_return_date: string | null;
   status: string;
   notes: string | null;
   created_at: string;
@@ -162,6 +166,7 @@ export interface Acquisition {
   source_id: string | null;
   price: number | null;
   currency: string | null;
+  authorisation_reference: string | null;
   notes: string | null;
   created_at: string;
 }
