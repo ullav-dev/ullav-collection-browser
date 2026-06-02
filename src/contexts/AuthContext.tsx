@@ -4,6 +4,24 @@ import { createContext, useContext, useEffect, useRef, useState, useCallback } f
 import type { AuthUser, LoginResponse } from "@/lib/auth-api";
 import { login as apiLogin } from "@/lib/auth-api";
 
+/** Decode the permissions array from a JWT payload without verifying signature (server enforces). */
+function permissionsFromToken(token: string): string[] {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return Array.isArray(payload.permissions) ? payload.permissions : [];
+  } catch {
+    return [];
+  }
+}
+
+export interface SessionPayload {
+  token: string;
+  user: AuthUser;
+  roles: string[];
+  /** Optional — derived from the JWT if omitted (SSO payloads don't include it). */
+  permissions?: string[];
+}
+
 interface AuthState {
   user: AuthUser | null;
   token: string | null;
@@ -12,7 +30,7 @@ interface AuthState {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<LoginResponse>;
   logout: () => void;
-  setSession: (session: { token: string; user: AuthUser; roles: string[]; permissions: string[] }) => void;
+  setSession: (session: SessionPayload) => void;
 }
 
 const AuthContext = createContext<AuthState>({
@@ -117,12 +135,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  const setSession = useCallback((session: { token: string; user: AuthUser; roles: string[]; permissions: string[] }) => {
+  const setSession = useCallback((session: SessionPayload) => {
+    const permissions = session.permissions ?? permissionsFromToken(session.token);
     setUser(session.user);
     setToken(session.token);
     setRoles(session.roles);
-    setPermissions(session.permissions);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    setPermissions(permissions);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...session, permissions }));
   }, []);
 
   const login = useCallback(async (email: string, password: string): Promise<LoginResponse> => {

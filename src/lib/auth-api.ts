@@ -1,10 +1,23 @@
-// Typed wrappers for the user-management service at http://localhost:8081.
-// In the browser requests go via the Next.js /auth-api/* rewrite to avoid CORS.
+// Typed wrappers for ullav-user-management.
+//
+// Login goes via the collection server's /auth/login proxy (proxied in the browser
+// as /api/auth/login) so that UUM stays off the public internet.
+// All other auth calls (register, confirm-email, password-reset) go directly to
+// UUM via the /auth-api/* Next.js rewrite.
 
-const BASE =
+const UUM_BASE =
   typeof window === "undefined"
     ? (process.env.AUTH_URL ?? "http://localhost:8081")
     : "/auth-api";
+
+// Collection server login proxy — browser uses /api rewrite, server uses direct URL.
+const LOGIN_BASE =
+  typeof window === "undefined"
+    ? (process.env.API_URL ?? "http://localhost:8084")
+    : "/api";
+
+// Keep original BASE alias for non-login calls.
+const BASE = UUM_BASE;
 
 export interface AuthUser {
   id: string;
@@ -67,11 +80,19 @@ export function hasPermission(token: string | null, permission: string): boolean
   return roles.includes("admin") || perms.includes(permission);
 }
 
-export const login = (email: string, password: string): Promise<LoginResponse> =>
-  authRequest("/auth/login", {
+export const login = (email: string, password: string): Promise<LoginResponse> => {
+  // Route through the collection server's auth proxy, not UUM directly.
+  const url = `${LOGIN_BASE}/auth/login`;
+  return fetch(url, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
+  }).then(async (res) => {
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? data.message ?? `HTTP ${res.status}`);
+    return data as LoginResponse;
   });
+};
 
 export const register = (
   username: string,
