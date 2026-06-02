@@ -1,0 +1,21 @@
+{
+  "nav": {
+    "collection": "Cnuasach",
+    "locations": "Suímhanna",
+    "entries": "Iontrála",
+    "acquisitions": "Fáltais",
+    "parties": "Páirtithe",
+    "browse": "Brabhsáil",
+    "signIn": "Sínigh isteach",
+    "signOut": "Sínigh amach"
+  },
+  "localeSwitcher": {
+    "label": "Teanga",
+    "en": "EN",
+    "de": "DE",
+    "ga": "GA"
+  },
+  "footer": {
+    "copyright": "© {year} Ullav. Gach ceart ar cosnamh."
+  }
+}

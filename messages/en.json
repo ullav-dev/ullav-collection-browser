@@ -1,0 +1,21 @@
+{
+  "nav": {
+    "collection": "Collection",
+    "locations": "Locations",
+    "entries": "Entries",
+    "acquisitions": "Acquisitions",
+    "parties": "Parties",
+    "browse": "Browse",
+    "signIn": "Sign in",
+    "signOut": "Sign out"
+  },
+  "localeSwitcher": {
+    "label": "Language",
+    "en": "EN",
+    "de": "DE",
+    "ga": "GA"
+  },
+  "footer": {
+    "copyright": "© {year} Ullav. All rights reserved."
+  }
+}
