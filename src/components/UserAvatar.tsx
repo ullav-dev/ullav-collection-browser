@@ -48,7 +48,7 @@ export default function UserAvatar({ user, size = "sm", className = "" }: Props)
   return (
     <span
       title={label}
-      className={`${dim} rounded-full bg-teal-100 text-teal-700 font-semibold flex items-center justify-center select-none shrink-0 ${className}`}
+      className={`${dim} rounded-full bg-teal-600 text-white font-semibold flex items-center justify-center select-none shrink-0 ${className}`}
     >
       {initials}
     </span>

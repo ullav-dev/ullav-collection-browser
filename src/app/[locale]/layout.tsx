@@ -15,7 +15,7 @@ const geist = Geist({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Taisce",
   description: "Collection Management",
-  icons: { icon: "/favicon.ico" },
+  icons: { icon: "/favicon.svg", shortcut: "/favicon.svg", apple: "/favicon.svg" },
 };
 
 export default async function LocaleLayout({
