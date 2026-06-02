@@ -6,8 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 import UserAvatar, { userDisplayName } from "@/components/UserAvatar";
 
-// Taisce SVG logo — teal archive/collection motif
-function TaisceIcon({ className = "w-7 h-7" }: { className?: string }) {
+// Cartlann SVG logo — teal archive/collection motif
+function CartlannIcon({ className = "w-7 h-7" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="32" cy="32" r="32" fill="#0D9488"/>
@@ -60,8 +60,8 @@ export default function Nav() {
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5">
-            <TaisceIcon />
-            <span className="font-bold text-lg text-slate-800 tracking-tight">Taisce</span>
+            <CartlannIcon />
+            <span className="font-bold text-lg text-slate-800 tracking-tight">Cartlann</span>
           </Link>
 
           <nav className="flex items-center gap-4">

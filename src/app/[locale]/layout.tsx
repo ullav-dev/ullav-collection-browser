@@ -13,7 +13,7 @@ import HtmlAttributes from "@/components/HtmlAttributes";
 const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Taisce",
+  title: "Cartlann",
   description: "Collection Management",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg", apple: "/favicon.svg" },
 };

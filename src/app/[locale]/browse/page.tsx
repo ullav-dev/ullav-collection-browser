@@ -104,7 +104,7 @@ export default function BrowsePage() {
       <div className="mt-12 pt-6 border-t border-slate-200 text-center">
         <p className="text-xs text-slate-400">
           Powered by{" "}
-          <Link href="/" className="text-teal-600 hover:text-teal-700">Taisce</Link>
+          <Link href="/" className="text-teal-600 hover:text-teal-700">Cartlann</Link>
           {" "}·{" "}
           <Link href="/login" className="text-teal-600 hover:text-teal-700">Sign in</Link>
         </p>

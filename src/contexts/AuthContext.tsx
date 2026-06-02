@@ -44,7 +44,7 @@ const AuthContext = createContext<AuthState>({
   setSession: () => {},
 });
 
-const STORAGE_KEY = "taisce_auth";
+const STORAGE_KEY = "cartlann_auth";
 
 const IDLE_MS = Number(process.env.NEXT_PUBLIC_IDLE_TIMEOUT_MS ?? 3_600_000);
 const WARN_BEFORE_MS = 60_000;

@@ -1,6 +1,6 @@
 "use client";
 
-// SSO handoff page — called by ullav-portal when launching Taisce.
+// SSO handoff page — called by ullav-portal when launching Cartlann.
 // URL format: /en/auth/sso?t=<encoded-session>
 //
 // The encoded session is URL-encoded JSON: { token, user, roles }

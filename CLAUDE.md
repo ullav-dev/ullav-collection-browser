@@ -2,7 +2,7 @@
 
 ## Overview
 
-Next.js 16 frontend for the Ullav collection management system (Spectrum 5-aligned). Named **Taisce** (Irish: treasury/archive). Serves both institutional users (museums, galleries, archaeology) and hobby collectors.
+Next.js 16 frontend for the Ullav collection management system (Spectrum 5-aligned). Named **Cartlann** (Irish: treasury/archive). Serves both institutional users (museums, galleries, archaeology) and hobby collectors.
 
 ## Tech Stack
 
@@ -38,7 +38,7 @@ API rewrites configured in `src/proxy.ts` (Next.js 16's replacement for `middlew
 - `src/lib/auth-api.ts` — auth service wrapper
 - `src/lib/collection-api.ts` — collection server wrapper (all typed endpoints)
 - `src/contexts/AuthContext.tsx` — auth state + idle timeout
-- `src/components/Nav.tsx` — header with teal branding + Taisce logo SVG
+- `src/components/Nav.tsx` — header with teal branding + Cartlann logo SVG
 
 ## Commands
 
@@ -51,7 +51,7 @@ npm run lint   # ESLint
 ## Architecture Notes
 
 - All authenticated pages redirect to `/login` when `user` is null (via `useEffect` + `router.replace`)
-- `AuthContext` stores session in `localStorage` under key `taisce_auth`
+- `AuthContext` stores session in `localStorage` under key `cartlann_auth`
 - Public portal at `/[locale]/browse` — uses `/api/public/objects` (no auth)
 - Locale layout (`src/app/[locale]/layout.tsx`) wraps everything in `AuthProvider` + `NextIntlClientProvider`
 - `src/app/layout.tsx` is minimal (no font/style) — locale layout handles all styling

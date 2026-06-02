@@ -11,7 +11,7 @@ type Stage = "form" | "reset-request";
 const inputCls =
   "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm w-full focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500";
 
-function TaisceIcon() {
+function CartlannIcon() {
   return (
     <svg className="w-8 h-8" viewBox="0 0 64 64" fill="none">
       <circle cx="32" cy="32" r="32" fill="#0D9488"/>
@@ -99,7 +99,7 @@ export default function LoginPage() {
       <div className="h-full flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm w-full max-w-md p-8">
           <div className="flex items-center gap-2.5 mb-6">
-            <TaisceIcon />
+            <CartlannIcon />
             <span className="font-bold text-lg text-slate-800">Reset password</span>
           </div>
           {error && <ErrorBox message={error} />}
@@ -155,8 +155,8 @@ export default function LoginPage() {
     <div className="h-full flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm w-full max-w-md p-8">
         <div className="flex items-center gap-2.5 mb-8">
-          <TaisceIcon />
-          <span className="font-bold text-lg text-slate-800">Taisce</span>
+          <CartlannIcon />
+          <span className="font-bold text-lg text-slate-800">Cartlann</span>
         </div>
 
         {error && <ErrorBox message={error} />}

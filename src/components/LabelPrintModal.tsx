@@ -32,7 +32,7 @@ export default function LabelPrintModal({ objects, onClose }: Props) {
   const [type, setType] = useState<LabelType>("medium" in {} ? "qr" : "qr");
   const [size, setSize] = useState<LabelSize>("medium");
   const [copies, setCopies] = useState(1);
-  const [institutionName, setInstitutionName] = useState("Taisce Collection");
+  const [institutionName, setInstitutionName] = useState("Cartlann Collection");
   const [generating, setGenerating] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -84,7 +84,7 @@ export default function LabelPrintModal({ objects, onClose }: Props) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `taisce-labels-${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.download = `cartlann-labels-${new Date().toISOString().slice(0, 10)}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
