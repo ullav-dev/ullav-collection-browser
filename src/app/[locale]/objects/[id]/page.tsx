@@ -17,6 +17,9 @@ import {
   type ConservationTreatment,
   type Loan,
 } from "@/lib/collection-api";
+import dynamic from "next/dynamic";
+
+const LabelPrintModal = dynamic(() => import("@/components/LabelPrintModal"), { ssr: false });
 
 type Tab = "details" | "condition" | "conservation" | "loans" | "movements" | "parts";
 
@@ -54,6 +57,7 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
   const [tab, setTab] = useState<Tab>("details");
 
   const [object, setObject] = useState<CollectionObject | null>(null);
+  const [showPrintModal, setShowPrintModal] = useState(false);
   const [movements, setMovements] = useState<ObjectMovement[]>([]);
   const [parts, setParts] = useState<ObjectPart[]>([]);
   const [conditionChecks, setConditionChecks] = useState<ConditionCheck[]>([]);
@@ -135,6 +139,7 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
     : null;
 
   return (
+    <>
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-slate-400 mb-6">
@@ -163,12 +168,26 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
             <p className="font-mono text-sm text-slate-400">{object.accession_number}</p>
           )}
         </div>
-        <Link
-          href={`/objects/${object.id}/edit` as never}
-          className="text-sm font-medium text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-400 px-3 py-1.5 rounded-lg transition-colors"
-        >
-          Edit
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowPrintModal(true)}
+            title="Print label"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 border border-slate-200 hover:border-slate-300 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75V16.5zM16.5 6.75h.75v.75h-.75v-.75z" />
+            </svg>
+            Label
+          </button>
+          <Link
+            href={`/objects/${object.id}/edit` as never}
+            className="text-sm font-medium text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-400 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            Edit
+          </Link>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -348,6 +367,14 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
         )}
       </div>
     </div>
+
+    {showPrintModal && object && (
+      <LabelPrintModal
+        objects={[{ id: object.id, title: object.title, accession_number: object.accession_number, object_name: object.object_name }]}
+        onClose={() => setShowPrintModal(false)}
+      />
+    )}
+    </>
   );
 }
 
