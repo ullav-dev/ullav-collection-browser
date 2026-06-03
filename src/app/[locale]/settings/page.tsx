@@ -16,6 +16,8 @@ import {
   type AiSettings,
 } from "@/lib/collection-api";
 
+import TeamSection from "@/components/TeamSection";
+
 // ── AI provider model options ─────────────────────────────────────────────────
 
 const PROVIDER_MODELS: Record<string, string[]> = {
@@ -456,6 +458,17 @@ export default function SettingsPage() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
           <AiSettingsSection token={token!} />
         </div>
+      </section>
+
+      {/* Team management */}
+      <section className="mb-10">
+        <div className="mb-4">
+          <h2 className="font-semibold text-slate-700">Team</h2>
+          <p className="text-sm text-slate-400 mt-0.5">
+            Manage members and Cartlann roles for your team. Team creation and ownership is handled via the Ullav Portal.
+          </p>
+        </div>
+        <TeamSection />
       </section>
 
       {/* Accession Number Schemes */}

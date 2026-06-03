@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCollection } from "@/contexts/CollectionContext";
 import {
   listEntries, createEntry, updateEntry, listParties,
   type ObjectEntry, type Party,
@@ -42,7 +43,9 @@ function fromEntry(e: ObjectEntry): FormState {
 }
 
 export default function EntriesPage() {
-  const { user, token, isLoading } = useAuth();
+  const { user, token, isLoading } = useAuth(); 
+  const { userRole } = useCollection();
+  const canWrite = userRole !== "viewer";
   const router = useRouter();
   const [entries, setEntries] = useState<ObjectEntry[]>([]);
   const [parties, setParties] = useState<Party[]>([]);

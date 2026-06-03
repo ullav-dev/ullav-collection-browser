@@ -137,3 +137,80 @@ export const changePassword = (
     headers: { Authorization: `Bearer ${bearerToken}` },
     body: JSON.stringify({ new_password: newPassword, current_password: currentPassword }),
   });
+
+// ── Teams API ─────────────────────────────────────────────────────────────────
+
+function authBearerRequest<T>(path: string, bearerToken: string, init?: RequestInit): Promise<T> {
+  return authRequest<T>(path, {
+    ...init,
+    headers: { Authorization: `Bearer ${bearerToken}`, ...init?.headers },
+  });
+}
+
+export interface TeamMemberUser {
+  id: string;
+  username: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+}
+
+export interface TeamMember {
+  id: string;
+  user: TeamMemberUser;
+  role: string;
+  status: "invited" | "active" | "inactive";
+  invited_at: string;
+  joined_at: string | null;
+  product_role: string | null;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  description: string | null;
+  purpose: string | null;
+  owner: TeamMemberUser;
+  members: TeamMember[];
+  created_at: string;
+}
+
+export const getTeam = (token: string, teamId: string): Promise<Team> =>
+  authBearerRequest<Team>(`/teams/${teamId}`, token);
+
+export const inviteMember = (
+  token: string,
+  teamId: string,
+  email: string,
+  appUrl: string,
+  productRole?: string
+): Promise<void> =>
+  authBearerRequest<void>(`/teams/${teamId}/invitations`, token, {
+    method: "POST",
+    body: JSON.stringify({ email, app_url: appUrl, product_slug: "cartlann", product_role: productRole }),
+  });
+
+export const removeMember = (token: string, teamId: string, userId: string): Promise<void> =>
+  authBearerRequest<void>(`/teams/${teamId}/members/${userId}`, token, { method: "DELETE" });
+
+export const updateMemberProductRole = (
+  token: string,
+  teamId: string,
+  userId: string,
+  role: string
+): Promise<void> =>
+  authBearerRequest<void>(`/teams/${teamId}/members/${userId}/product-roles/cartlann`, token, {
+    method: "PUT",
+    body: JSON.stringify({ role }),
+  });
+
+export const acceptTeamInvite = (token: string, inviteToken: string): Promise<{ token: string }> =>
+  authBearerRequest<{ token: string }>(`/teams/invitations/${inviteToken}/accept`, token, {
+    method: "POST",
+  });
+
+export const declineTeamInvite = (token: string, inviteToken: string): Promise<void> =>
+  authBearerRequest<void>(`/teams/invitations/${inviteToken}/decline`, token, {
+    method: "POST",
+  });

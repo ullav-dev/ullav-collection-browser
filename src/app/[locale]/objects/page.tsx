@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCollection } from "@/contexts/CollectionContext";
 import { listObjects, type CollectionObject } from "@/lib/collection-api";
 import { exportJson, exportCsv, exportLido } from "@/lib/export";
 import dynamic from "next/dynamic";
@@ -36,6 +37,8 @@ function toLabelObject(obj: CollectionObject): LabelObject {
 
 export default function ObjectsPage() {
   const { user, token, isLoading } = useAuth();
+  const { userRole } = useCollection();
+  const canWrite = userRole !== "viewer";
   const router = useRouter();
   const locale = useLocale();
 
@@ -148,15 +151,17 @@ export default function ObjectsPage() {
             </svg>
             Import
           </button>
-          <Link
-            href="/objects/new"
-            className="inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Add object
-          </Link>
+          {canWrite && (
+            <Link
+              href="/objects/new"
+              className="inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Add object
+            </Link>
+          )}
         </div>
       </div>
 
@@ -179,9 +184,11 @@ export default function ObjectsPage() {
       ) : objects.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-slate-400 text-sm mb-3">No objects found.</p>
-          <Link href="/objects/new" className="text-teal-600 hover:text-teal-700 text-sm font-medium">
-            Add the first object →
-          </Link>
+          {canWrite && (
+            <Link href="/objects/new" className="text-teal-600 hover:text-teal-700 text-sm font-medium">
+              Add the first object →
+            </Link>
+          )}
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">

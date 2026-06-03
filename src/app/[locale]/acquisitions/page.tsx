@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCollection } from "@/contexts/CollectionContext";
 import {
   listAcquisitions, createAcquisition, getAcquisition,
   listObjects, listEntries, listParties,
@@ -30,7 +31,9 @@ interface DetailModal { type: "detail"; acq: Acquisition }
 type ModalState = null | "new" | DetailModal;
 
 export default function AcquisitionsPage() {
-  const { user, token, isLoading } = useAuth();
+  const { user, token, isLoading } = useAuth(); 
+  const { userRole } = useCollection();
+  const canWrite = userRole !== "viewer";
   const router = useRouter();
   const [acquisitions, setAcquisitions] = useState<Acquisition[]>([]);
   const [objects, setObjects] = useState<CollectionObject[]>([]);

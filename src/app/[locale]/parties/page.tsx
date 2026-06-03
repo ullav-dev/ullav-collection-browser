@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCollection } from "@/contexts/CollectionContext";
 import { listParties, createParty, updateParty, type Party } from "@/lib/collection-api";
 import Modal from "@/components/Modal";
 import FormField, { inputCls, selectCls, ErrorBox, SaveButton } from "@/components/FormField";
@@ -24,7 +25,9 @@ function fromParty(p: Party): FormState {
 }
 
 export default function PartiesPage() {
-  const { user, token, isLoading } = useAuth();
+  const { user, token, isLoading } = useAuth(); 
+  const { userRole } = useCollection();
+  const canWrite = userRole !== "viewer";
   const router = useRouter();
   const [parties, setParties] = useState<Party[]>([]);
   const [search, setSearch] = useState("");

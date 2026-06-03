@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCollection } from "@/contexts/CollectionContext";
 import {
   getObject, getObjectMovements, getObjectParts,
   listConditionChecks, createConditionCheck,
@@ -52,6 +53,8 @@ function SectionEmpty({ message }: { message: string }) {
 
 export default function ObjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { user, token, roles, isLoading } = useAuth();
+  const { userRole } = useCollection();
+  const canWrite = userRole !== "viewer";
   const router = useRouter();
   const locale = useLocale();
   const [id, setId] = useState<string | null>(null);
@@ -237,12 +240,14 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
             </svg>
             Label
           </button>
-          <Link
-            href={`/objects/${object.id}/edit` as never}
-            className="text-sm font-medium text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-400 px-3 py-1.5 rounded-lg transition-colors"
-          >
-            Edit
-          </Link>
+          {canWrite && (
+            <Link
+              href={`/objects/${object.id}/edit` as never}
+              className="text-sm font-medium text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-400 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Edit
+            </Link>
+          )}
         </div>
       </div>
 
