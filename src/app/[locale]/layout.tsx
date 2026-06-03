@@ -8,6 +8,7 @@ import "../globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CollectionProvider } from "@/contexts/CollectionContext";
 import HtmlAttributes from "@/components/HtmlAttributes";
 
 const geist = Geist({ subsets: ["latin"] });
@@ -41,9 +42,11 @@ export default async function LocaleLayout({
       <HtmlAttributes locale={locale} bodyClass={bodyClass} />
       <NextIntlClientProvider messages={messages}>
         <AuthProvider>
-          <Nav />
-          <main className="flex-1 overflow-auto">{children}</main>
-          <Footer />
+          <CollectionProvider>
+            <Nav />
+            <main className="flex-1 overflow-auto">{children}</main>
+            <Footer />
+          </CollectionProvider>
         </AuthProvider>
       </NextIntlClientProvider>
     </>

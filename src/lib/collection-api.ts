@@ -6,12 +6,21 @@ const BASE =
     ? (process.env.API_URL ?? "http://localhost:8082")
     : "/api";
 
+// Module-level active collection ID, set by CollectionContext on mount and on switch.
+// Injected into every authenticated API request as X-Collection-Id.
+let _activeCollectionId: string | null = null;
+
+export function setActiveCollectionId(id: string | null): void {
+  _activeCollectionId = id;
+}
+
 async function apiRequest<T>(path: string, token: string | null, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(init?.headers as Record<string, string>),
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (_activeCollectionId) headers["X-Collection-Id"] = _activeCollectionId;
 
   const res = await fetch(`${BASE}${path}`, { ...init, headers });
   const contentType = res.headers.get("content-type") ?? "";
@@ -22,6 +31,49 @@ async function apiRequest<T>(path: string, token: string | null, init?: RequestI
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? data.message ?? data.detail ?? `HTTP ${res.status}`);
   return data as T;
+}
+
+// ── Collections ───────────────────────────────────────────────────────────────
+
+export interface Collection {
+  id: string;
+  team_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateCollectionRequest {
+  team_id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  is_public?: boolean;
+}
+
+export interface UpdateCollectionRequest {
+  name: string;
+  description?: string;
+  is_public?: boolean;
+}
+
+export async function listCollections(token: string): Promise<Collection[]> {
+  return apiRequest<Collection[]>("/collections", token);
+}
+
+export async function createCollection(token: string, req: CreateCollectionRequest): Promise<Collection> {
+  return apiRequest<Collection>("/collections", token, { method: "POST", body: JSON.stringify(req) });
+}
+
+export async function updateCollection(token: string, id: string, req: UpdateCollectionRequest): Promise<Collection> {
+  return apiRequest<Collection>(`/collections/${id}`, token, { method: "PUT", body: JSON.stringify(req) });
+}
+
+export async function deleteCollection(token: string, id: string): Promise<void> {
+  return apiRequest<void>(`/collections/${id}`, token, { method: "DELETE" });
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
