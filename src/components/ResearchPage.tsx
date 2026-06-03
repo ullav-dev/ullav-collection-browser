@@ -1253,11 +1253,12 @@ function FolderItemReal({
   }, [menuOpen]);
 
   return (
-    <div className="relative group">
+    <div className="relative group flex items-center">
+      {/* Folder row — separated from the three-dot button to avoid button-in-button */}
       <button
         type="button"
         onClick={onClick}
-        className={`w-full flex items-center justify-between px-3 py-1.5 text-sm transition-colors ${
+        className={`flex-1 flex items-center justify-between px-3 py-1.5 text-sm transition-colors min-w-0 ${
           active
             ? "bg-teal-50 text-teal-700 font-medium"
             : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
@@ -1269,20 +1270,19 @@ function FolderItemReal({
           </svg>
           <span className="truncate">{folder.name}</span>
         </span>
-        <div className="flex items-center gap-1">
-          {count > 0 && (
-            <span className={`text-[11px] ${active ? "text-teal-500" : "text-slate-400"}`}>{count}</span>
-          )}
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
-            className="w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-700 rounded transition-all"
-          >
-            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-            </svg>
-          </button>
-        </div>
+        {count > 0 && (
+          <span className={`text-[11px] shrink-0 ${active ? "text-teal-500" : "text-slate-400"}`}>{count}</span>
+        )}
+      </button>
+      {/* Three-dot menu — sibling of the folder button, not inside it */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
+        className="w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-700 rounded transition-all shrink-0 mr-1"
+      >
+        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+        </svg>
       </button>
 
       {menuOpen && (
