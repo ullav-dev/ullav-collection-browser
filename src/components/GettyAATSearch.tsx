@@ -31,6 +31,11 @@ function buildNoteBody(term: AATTerm): string {
   return lines.join("\n");
 }
 
+// ── Hero ──────────────────────────────────────────────────────────────────────
+
+// Van Gogh's "Irises" (1889) — J. Paul Getty Museum, public domain (Wikimedia Commons)
+const HERO_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/3/3e/Irises-Vincent_van_Gogh.jpg";
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -77,6 +82,17 @@ export default function GettyAATSearch({ onSaveAsNote, initialQuery }: Props) {
 
   return (
     <div className="flex flex-col gap-4 h-full">
+      {/* Hero */}
+      <div className="relative rounded-2xl overflow-hidden bg-slate-100 shrink-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={HERO_IMAGE} alt="Getty Art & Architecture Thesaurus" className="w-full object-cover max-h-40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/75 via-slate-900/20 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 p-3">
+          <p className="text-white font-semibold text-sm drop-shadow">Getty Art & Architecture Thesaurus</p>
+          <p className="text-slate-200 text-xs mt-0.5 drop-shadow">Controlled vocabulary for art, architecture, and material culture</p>
+        </div>
+      </div>
+
       {/* Search input */}
       <div className="relative">
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -219,6 +235,15 @@ export default function GettyAATSearch({ onSaveAsNote, initialQuery }: Props) {
           )}
         </div>
       </div>
+
+      {/* Attribution */}
+      <p className="text-xs text-slate-400 text-center shrink-0">
+        Data from the{" "}
+        <a href="https://vocab.getty.edu/aat/" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-600">
+          Getty Art & Architecture Thesaurus
+        </a>
+        {" "}— © J. Paul Getty Trust, Open Content Program
+      </p>
     </div>
   );
 }

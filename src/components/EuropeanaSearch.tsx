@@ -63,6 +63,11 @@ function buildNoteBody(item: EuropeanaItem): string {
   return lines.join("\n");
 }
 
+// ── Hero ──────────────────────────────────────────────────────────────────────
+
+// Vermeer, "Girl with a Pearl Earring" (c.1665) — Mauritshuis, public domain (Wikimedia Commons)
+const HERO_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/d/d7/Meisje_met_de_parel.jpg";
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -148,6 +153,22 @@ export default function EuropeanaSearch({ onSaveAsNote, initialQuery }: Props) {
 
   return (
     <div className="flex flex-col gap-3 h-full">
+      {/* Hero */}
+      <div className="relative rounded-2xl overflow-hidden bg-slate-100 shrink-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={HERO_IMAGE}
+          alt="Europeana — European cultural heritage"
+          className="w-full object-cover max-h-40"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/75 via-slate-900/20 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 p-3">
+          <p className="text-white font-semibold text-sm drop-shadow">Europeana</p>
+          <p className="text-slate-200 text-xs mt-0.5 drop-shadow">50+ million digitised objects from museums and archives across Europe</p>
+        </div>
+      </div>
+
       {/* Search + filter row */}
       <div className="flex gap-2">
         <div className="relative flex-1">
@@ -344,6 +365,15 @@ export default function EuropeanaSearch({ onSaveAsNote, initialQuery }: Props) {
           )}
         </div>
       </div>
+
+      {/* Attribution */}
+      <p className="text-xs text-slate-400 text-center shrink-0">
+        Data from{" "}
+        <a href="https://www.europeana.eu" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-600">
+          Europeana
+        </a>
+        {" "}— © Europeana Foundation, Creative Commons licences vary per item
+      </p>
     </div>
   );
 }

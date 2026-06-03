@@ -15,7 +15,7 @@ import MarkdownEditor, { MarkdownBody } from "@/components/MarkdownEditor";
 import NoteThread from "@/components/NoteThread";
 import AiChat from "@/components/AiChat";
 import WikipediaSearch from "@/components/WikipediaSearch";
-import ExplorePanel from "@/components/ExplorePanel";
+import ExplorePanel, { type ExploreSource } from "@/components/ExplorePanel";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -100,6 +100,9 @@ export default function ResearchPage({ objectId, noteId, isNew }: Props) {
   const [activeFolder, setActiveFolder] = useState<ActiveFolder>("all");
   const [activeNote, setActiveNote] = useState<ResearchNote | null>(null);
   const [rightPanel, setRightPanel] = useState<RightPanel>("notes");
+  const [exploreSource, setExploreSource] = useState<ExploreSource>("getty");
+  const [exploreMenuOpen, setExploreMenuOpen] = useState(false);
+  const exploreMenuRef = useRef<HTMLDivElement>(null);
   const [aiNoteContext, setAiNoteContext] = useState<{ title: string; body: string } | null>(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<NoteForm>(EMPTY_FORM);
@@ -190,6 +193,18 @@ export default function ResearchPage({ objectId, noteId, isNew }: Props) {
     const id = setInterval(loadNotes, 60000);
     return () => clearInterval(id);
   }, [activeFolder, loadNotes, token]);
+
+  // Close explore menu on outside click
+  useEffect(() => {
+    if (!exploreMenuOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (exploreMenuRef.current && !exploreMenuRef.current.contains(e.target as Node)) {
+        setExploreMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [exploreMenuOpen]);
 
   // Close object search on outside click
   useEffect(() => {
@@ -641,7 +656,6 @@ export default function ResearchPage({ objectId, noteId, isNew }: Props) {
               { id: "notes", label: "Notes" },
               { id: "ai", label: "AI" },
               { id: "wikipedia", label: "Wikipedia" },
-              { id: "explore", label: "Explore" },
             ] as { id: RightPanel; label: string }[]
           ).map(({ id, label }) => (
             <button
@@ -657,6 +671,55 @@ export default function ResearchPage({ objectId, noteId, isNew }: Props) {
               {label}
             </button>
           ))}
+
+          {/* Explore dropdown */}
+          <div ref={exploreMenuRef} className="relative flex items-center">
+            <button
+              type="button"
+              onClick={() => { setExploreMenuOpen((o) => !o); setMobileView("panel"); }}
+              className={`inline-flex items-center gap-1 px-2 md:px-3 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                rightPanel === "explore"
+                  ? "border-teal-600 text-teal-600"
+                  : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+              }`}
+            >
+              Explore
+              <svg className={`w-3 h-3 transition-transform ${exploreMenuOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+              </svg>
+            </button>
+            {exploreMenuOpen && (
+              <div className="absolute left-0 top-full mt-1 w-56 bg-white border border-slate-200 rounded-xl shadow-lg z-30 py-1 overflow-hidden">
+                {([
+                  { id: "getty" as ExploreSource,    icon: "https://www.getty.edu/favicon.ico",                                              label: "Getty AAT",   sub: "Art & Architecture Thesaurus" },
+                  { id: "europeana" as ExploreSource, icon: "https://www.europeana.eu/favicon.ico",                                           label: "Europeana",   sub: "European cultural heritage" },
+                  { id: "wikidata" as ExploreSource,  icon: "https://www.wikidata.org/static/favicon/wikidata.ico",                           label: "Wikidata",    sub: "Entities & authority records" },
+                  { id: "pas" as ExploreSource,       icon: "https://finds.org.uk/favicon.ico",                                              label: "British Museum PAS", sub: "Portable Antiquities Scheme" },
+                ]).map(({ id, icon, label, sub }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => { setExploreSource(id); setRightPanel("explore"); setExploreMenuOpen(false); setMobileView("panel"); }}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                      rightPanel === "explore" && exploreSource === id
+                        ? "bg-teal-50 text-teal-800 font-medium"
+                        : "text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={icon} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    <div className="min-w-0 text-left">
+                      <p className="leading-tight">{label}</p>
+                      <p className="text-xs text-slate-400 font-normal leading-tight">{sub}</p>
+                    </div>
+                    {rightPanel === "explore" && exploreSource === id && (
+                      <span className="ml-auto text-teal-600 text-xs">✓</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Panel content */}
@@ -711,6 +774,7 @@ export default function ResearchPage({ objectId, noteId, isNew }: Props) {
           )}
           {rightPanel === "explore" && (
             <ExplorePanel
+              source={exploreSource}
               onSaveAsNote={handleSaveAsNote}
               contextObject={contextObject}
             />

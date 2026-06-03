@@ -81,6 +81,11 @@ function buildNoteBody(entity: WikidataEntity, lang: string, label: string, desc
   return lines.join("\n");
 }
 
+// ── Hero ──────────────────────────────────────────────────────────────────────
+
+// Wikidata logo on Wikimedia Commons — CC0
+const HERO_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/6/66/Wikidata-logo-en.svg";
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -172,6 +177,15 @@ export default function WikidataSearch({ onSaveAsNote, initialQuery }: Props) {
 
   return (
     <div className="flex flex-col gap-4 h-full">
+      {/* Hero */}
+      <div className="relative rounded-2xl overflow-hidden bg-[#990000] shrink-0 flex items-center justify-center min-h-28">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={HERO_IMAGE} alt="Wikidata" className="h-16 object-contain my-4 drop-shadow-lg" />
+        <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
+          <p className="text-white text-xs drop-shadow">Structured knowledge base — authority records for artists, makers, places, and periods</p>
+        </div>
+      </div>
+
       {/* Search input */}
       <div className="relative">
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -344,6 +358,15 @@ export default function WikidataSearch({ onSaveAsNote, initialQuery }: Props) {
           )}
         </div>
       </div>
+
+      {/* Attribution */}
+      <p className="text-xs text-slate-400 text-center shrink-0">
+        Data from{" "}
+        <a href="https://www.wikidata.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-600">
+          Wikidata
+        </a>
+        {" "}— Wikimedia Foundation, CC0 Public Domain
+      </p>
     </div>
   );
 }

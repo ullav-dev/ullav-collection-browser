@@ -20,6 +20,11 @@ interface WikiSummary {
   content_urls: { desktop: { page: string } };
 }
 
+// ── Hero ──────────────────────────────────────────────────────────────────────
+
+// Wikipedia globe — Wikimedia Commons, CC BY-SA 3.0
+const HERO_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/d/de/Wikipedia_Logo_1.0.png";
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function buildNoteBody(summary: WikiSummary): string {
@@ -163,6 +168,16 @@ export default function WikipediaSearch({ onSaveAsNote, initialQuery }: Props) {
 
   return (
     <div className="flex flex-col gap-4 h-full px-4 py-4">
+      {/* Hero */}
+      <div className="relative rounded-2xl overflow-hidden bg-[#f6f6f6] border border-slate-200 shrink-0 flex items-center justify-center min-h-28">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={HERO_IMAGE} alt="Wikipedia" className="h-16 w-16 object-contain my-4" />
+        <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-slate-800/50 to-transparent">
+          <p className="text-white font-semibold text-sm drop-shadow">Wikipedia</p>
+          <p className="text-slate-100 text-xs drop-shadow mt-0.5">The free encyclopaedia — background on artists, makers, historical periods, and materials</p>
+        </div>
+      </div>
+
       {/* Search input */}
       <div className="relative">
         <svg
@@ -293,6 +308,15 @@ export default function WikipediaSearch({ onSaveAsNote, initialQuery }: Props) {
 
         </div>
       </div>
+
+      {/* Attribution */}
+      <p className="text-xs text-slate-400 text-center shrink-0">
+        Content from{" "}
+        <a href="https://www.wikipedia.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-600">
+          Wikipedia
+        </a>
+        {" "}— Wikimedia Foundation, CC BY-SA 4.0
+      </p>
     </div>
   );
 }
