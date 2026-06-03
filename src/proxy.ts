@@ -16,6 +16,18 @@ function route(request: NextRequest): NextResponse {
     );
   }
 
+  // Local Next.js API route handlers — must NOT be forwarded to the Rust server
+  const localApiPrefixes = [
+    "/api/ai/",
+    "/api/europeana/",
+    "/api/getty/",
+    "/api/wikidata/",
+    "/api/wikipedia/",
+  ];
+  if (localApiPrefixes.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
+
   // Proxy /api/* → ullav-collection-server (strips /api prefix)
   if (pathname.startsWith("/api/")) {
     const apiUrl = process.env.API_URL ?? "http://localhost:8084";

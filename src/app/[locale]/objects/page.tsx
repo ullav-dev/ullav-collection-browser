@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
 import { listObjects, type CollectionObject } from "@/lib/collection-api";
 import { exportJson, exportCsv, exportLido } from "@/lib/export";
@@ -36,6 +37,7 @@ function toLabelObject(obj: CollectionObject): LabelObject {
 export default function ObjectsPage() {
   const { user, token, isLoading } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
 
   const [objects, setObjects] = useState<CollectionObject[]>([]);
   const [search, setSearch] = useState("");
@@ -201,6 +203,7 @@ export default function ObjectsPage() {
                 <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wide hidden sm:table-cell">Object name</th>
                 <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wide hidden md:table-cell">Date</th>
                 <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wide">Status</th>
+                <th className="px-3 py-3 w-8 hidden lg:table-cell" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -257,6 +260,17 @@ export default function ObjectsPage() {
                     {obj.is_accessioned && (
                       <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-600 text-white">ACC</span>
                     )}
+                  </td>
+                  <td className="px-2 py-3 hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
+                    <Link
+                      href={`/research?objectId=${obj.id}`}
+                      title="Research"
+                      className="w-7 h-7 flex items-center justify-center text-slate-300 hover:text-teal-500 hover:bg-teal-50 rounded-lg transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                      </svg>
+                    </Link>
                   </td>
                 </tr>
               ))}

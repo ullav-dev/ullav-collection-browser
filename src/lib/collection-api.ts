@@ -422,3 +422,162 @@ export const setObjectPrimaryAsset = (
 
 export const removeObjectAsset = (token: string, objectId: string, assetId: string): Promise<void> =>
   apiRequest(`/objects/${objectId}/assets/${assetId}`, token, { method: "DELETE" });
+
+// ── Research types ────────────────────────────────────────────────────────────
+
+export interface ResearchFolder {
+  id: string;
+  user_id: string;
+  name: string;
+  created_at: string;
+}
+
+export interface ResearchNote {
+  id: string;
+  folder_id: string | null;
+  user_id: string;
+  title: string;
+  description: string | null;
+  body: string | null;
+  is_shared: boolean;
+  parent_id: string | null;
+  reply_count: number;
+  object_ids: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatSession {
+  id: string;
+  user_id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  session_id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+}
+
+export interface AiSettings {
+  id: string;
+  user_id: string;
+  provider: "anthropic" | "openai" | "google" | "mistral" | "ollama";
+  model: string;
+  base_url: string | null;
+  has_key: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Research folders ──────────────────────────────────────────────────────────
+
+export const listFolders = (token: string): Promise<ResearchFolder[]> =>
+  apiRequest("/research-folders", token);
+
+export const createFolder = (token: string, name: string): Promise<ResearchFolder> =>
+  apiRequest("/research-folders", token, { method: "POST", body: JSON.stringify({ name }) });
+
+export const renameFolder = (token: string, id: string, name: string): Promise<ResearchFolder> =>
+  apiRequest(`/research-folders/${id}`, token, { method: "PATCH", body: JSON.stringify({ name }) });
+
+export const deleteFolder = (token: string, id: string): Promise<void> =>
+  apiRequest(`/research-folders/${id}`, token, { method: "DELETE" });
+
+// ── Research notes ────────────────────────────────────────────────────────────
+
+export const listNotes = (token: string): Promise<ResearchNote[]> =>
+  apiRequest("/research-notes", token);
+
+export const createNote = (
+  token: string,
+  body: {
+    title: string;
+    description?: string | null;
+    body?: string | null;
+    folder_id?: string | null;
+    is_shared?: boolean;
+    object_ids?: string[];
+  },
+): Promise<ResearchNote> =>
+  apiRequest("/research-notes", token, { method: "POST", body: JSON.stringify(body) });
+
+export const getNote = (token: string, id: string): Promise<ResearchNote> =>
+  apiRequest(`/research-notes/${id}`, token);
+
+export const updateNote = (
+  token: string,
+  id: string,
+  body: Partial<Pick<ResearchNote, "title" | "description" | "body" | "folder_id" | "is_shared">>,
+): Promise<ResearchNote> =>
+  apiRequest(`/research-notes/${id}`, token, { method: "PUT", body: JSON.stringify(body) });
+
+export const deleteNote = (token: string, id: string): Promise<void> =>
+  apiRequest(`/research-notes/${id}`, token, { method: "DELETE" });
+
+export const setNoteFolder = (token: string, id: string, folderId: string | null): Promise<void> =>
+  apiRequest(`/research-notes/${id}/folder`, token, {
+    method: "PATCH",
+    body: JSON.stringify({ folder_id: folderId }),
+  });
+
+export const setNoteObjects = (token: string, id: string, objectIds: string[]): Promise<void> =>
+  apiRequest(`/research-notes/${id}/objects`, token, {
+    method: "PATCH",
+    body: JSON.stringify({ object_ids: objectIds }),
+  });
+
+export const listNoteReplies = (token: string, id: string): Promise<ResearchNote[]> =>
+  apiRequest(`/research-notes/${id}/replies`, token);
+
+export const createNoteReply = (token: string, id: string, body: string): Promise<ResearchNote> =>
+  apiRequest(`/research-notes/${id}/replies`, token, {
+    method: "POST",
+    body: JSON.stringify({ body }),
+  });
+
+export const listObjectNotes = (token: string, objectId: string): Promise<ResearchNote[]> =>
+  apiRequest(`/objects/${objectId}/research-notes`, token);
+
+// ── Chat sessions ─────────────────────────────────────────────────────────────
+
+export const listChatSessions = (token: string): Promise<ChatSession[]> =>
+  apiRequest("/chat-sessions", token);
+
+export const createChatSession = (token: string, title: string): Promise<ChatSession> =>
+  apiRequest("/chat-sessions", token, { method: "POST", body: JSON.stringify({ title }) });
+
+export const deleteChatSession = (token: string, id: string): Promise<void> =>
+  apiRequest(`/chat-sessions/${id}`, token, { method: "DELETE" });
+
+export const listSessionMessages = (token: string, sessionId: string): Promise<ChatMessage[]> =>
+  apiRequest(`/chat-sessions/${sessionId}/messages`, token);
+
+export const appendSessionMessage = (
+  token: string,
+  sessionId: string,
+  role: "user" | "assistant",
+  content: string,
+): Promise<ChatMessage> =>
+  apiRequest(`/chat-sessions/${sessionId}/messages`, token, {
+    method: "POST",
+    body: JSON.stringify({ role, content }),
+  });
+
+// ── AI settings ───────────────────────────────────────────────────────────────
+
+export const getAiSettings = (token: string): Promise<AiSettings | null> =>
+  apiRequest<AiSettings | null>("/ai-settings", token);
+
+export const upsertAiSettings = (
+  token: string,
+  body: { provider: string; model: string; api_key: string; base_url?: string | null },
+): Promise<AiSettings> =>
+  apiRequest("/ai-settings", token, { method: "POST", body: JSON.stringify(body) });
+
+export const deleteAiSettings = (token: string): Promise<void> =>
+  apiRequest("/ai-settings", token, { method: "DELETE" });

@@ -7,7 +7,8 @@
     "parties": "Parties",
     "browse": "Browse",
     "signIn": "Sign in",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "research": "Research"
   },
   "localeSwitcher": {
     "label": "Language",
@@ -17,5 +18,218 @@
   },
   "footer": {
     "copyright": "© {year} Ullav. All rights reserved."
+  },
+  "research": {
+    "title": "Research",
+    "currentObject": {
+      "researching": "Researching:",
+      "none": "No object selected — navigate to an object and click Research to set context.",
+      "clear": "Clear current object"
+    },
+    "tabs": {
+      "notes": "Notes",
+      "ai": "AI Assistant",
+      "wikipedia": "Wikipedia",
+      "explore": "Explore"
+    },
+    "folders": {
+      "allNotes": "All Notes",
+      "unfiled": "Unfiled",
+      "sharedByMe": "Shared by Me",
+      "sharedByOthers": "Shared by Others",
+      "newFolder": "New Folder",
+      "folderPlaceholder": "Folder name…",
+      "rename": "Rename",
+      "deleteFolder": "Delete folder"
+    },
+    "notes": {
+      "new": "New",
+      "noNotes": "No notes here.",
+      "createOne": "Create one →",
+      "selectOrCreate": "Select a note or create a new one to get started.",
+      "newNote": "+ New Note"
+    },
+    "editor": {
+      "newNote": "New Note",
+      "editNote": "Edit Note",
+      "title": "Title",
+      "titlePlaceholder": "Note title…",
+      "titleRequired": "Title is required",
+      "description": "Description",
+      "descriptionPlaceholder": "Brief subtitle or abstract…",
+      "content": "Content",
+      "contentPlaceholder": "Write your research notes in Markdown…",
+      "folder": "Folder",
+      "unfiled": "Unfiled",
+      "shareWithInstitution": "Share with institution",
+      "linkedObjects": "Linked Objects",
+      "linkObject": "Link object",
+      "objectSearchPlaceholder": "Search objects…",
+      "objectSearchHint": "Type at least 2 characters",
+      "noObjectMatches": "No matches",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "deleteNote": "Delete note",
+      "deleteConfirm": "Delete this note?",
+      "deleteConfirmBtn": "Confirm"
+    },
+    "viewer": {
+      "edit": "Edit",
+      "digDeeper": "Dig Deeper",
+      "shared": "Shared",
+      "noContent": "No content yet. Click Edit to add notes.",
+      "linkedObjects": "linked {count, plural, =1 {object} other {objects}}"
+    },
+    "thread": {
+      "noReplies": "No replies yet",
+      "replies": "{count} {count, plural, =1 {reply} other {replies}}",
+      "replyPlaceholder": "Add a reply (Markdown supported)…",
+      "reply": "Reply",
+      "replying": "…",
+      "loadingReplies": "Loading replies…"
+    },
+    "markdown": {
+      "preview": "Preview",
+      "edit": "Edit",
+      "placeholder": "Write in Markdown…",
+      "nothingToPreview": "Nothing to preview."
+    },
+    "ai": {
+      "title": "AI Assistant",
+      "history": "History",
+      "historyEmpty": "No saved sessions",
+      "clearChat": "Clear",
+      "saveConversation": "Save conversation",
+      "collectionContextToggle": "Add collection context",
+      "collectionContextEnabled": "Collection ({count} objects)",
+      "notConfigured": {
+        "title": "AI Assistant not configured",
+        "hint": "Add your API key in Settings to enable the AI research assistant.",
+        "goToSettings": "Go to Settings →"
+      },
+      "checkingConfig": "Checking AI configuration…",
+      "emptyHint": "Ask about provenance, attribution, cataloguing standards, or cultural property law.",
+      "researchingObject": "Researching: {objectTitle}",
+      "objectContextHint": "Object details are loaded as context. Ask about provenance, attribution, materials, or catalogue documentation.",
+      "placeholder": "Ask about provenance, attribution, cataloguing…",
+      "placeholderWithObject": "Ask about {objectTitle}…",
+      "send": "Send",
+      "saveAsNote": "Save as note",
+      "savedNoteTitle": "AI Research — {date}",
+      "savedNoteDescription": "Saved from AI Assistant",
+      "savedConversationTitle": "AI Conversation — {date}",
+      "savedConversationDescription": "Research conversation ({count} messages)",
+      "promptTemplates": "Prompt templates",
+      "promptTemplatesHide": "Hide prompts",
+      "aiSettings": "AI settings",
+      "you": "You",
+      "ai": "AI",
+      "suggestions": [
+        "What provenance records should I look for?",
+        "How do I check the Art Loss Register?",
+        "Explain Spectrum cataloguing standards"
+      ]
+    },
+    "wikipedia": {
+      "searchPlaceholder": "Search Wikipedia…",
+      "searching": "Searching…",
+      "title": "Wikipedia",
+      "prompt": "Search Wikipedia to find background on artists, makers, historical periods, places, or materials.",
+      "noResults": "No results for \"{query}\"",
+      "selectResult": "Select a result to read the article",
+      "loading": "Loading article…",
+      "openInWikipedia": "Open in Wikipedia ↗",
+      "saveAsNote": "Save as note"
+    },
+    "getty": {
+      "searchPlaceholder": "Search AAT terms — e.g. silver, oil paint, portrait…",
+      "searching": "Searching…",
+      "title": "Getty Art & Architecture Thesaurus",
+      "prompt": "Search for controlled vocabulary — object types, materials, techniques, styles, and periods used in art and architecture cataloguing.",
+      "noResults": "No AAT terms found for \"{query}\"",
+      "selectTerm": "Select a term to see its definition",
+      "hierarchy": "Hierarchy",
+      "definition": "Definition",
+      "viewInGetty": "View in Getty ↗",
+      "saveAsNote": "Save as note",
+      "description": "Controlled vocabulary for art & architecture terminology"
+    },
+    "europeana": {
+      "searchPlaceholder": "Search Europeana — e.g. Celtic jewellery, Roman pottery…",
+      "searching": "Searching…",
+      "title": "Europeana Cultural Heritage",
+      "prompt": "Search 50+ million digitised objects, artworks, books, and records from museums and archives across Europe.",
+      "noResults": "No results for \"{query}\"",
+      "selectRecord": "Select a record to see details",
+      "allTypes": "All types",
+      "noApiKey": {
+        "title": "Europeana API key not configured",
+        "hint": "Add EUROPEANA_API_KEY to your .env.local file. Get a free key at apis.europeana.eu."
+      },
+      "institution": "Institution",
+      "date": "Date",
+      "country": "Country",
+      "type": "Type",
+      "openInEuropeana": "Open in Europeana ↗",
+      "saveAsNote": "Save as note",
+      "description": "50M+ digitised records from European museums & archives"
+    },
+    "wikidata": {
+      "searchPlaceholder": "Search Wikidata — artists, makers, places, periods…",
+      "searching": "Searching…",
+      "title": "Wikidata Entity Search",
+      "prompt": "Look up artists, makers, dynasties, places, and historical periods. Retrieves structured authority data including VIAF, ULAN, and RKD identifiers.",
+      "noResults": "No results for \"{query}\"",
+      "selectEntity": "Select an entity to see details",
+      "loadingEntity": "Loading entity data…",
+      "born": "Born",
+      "died": "Died",
+      "authorityIds": "Authority identifiers",
+      "openInWikidata": "Open in Wikidata ↗",
+      "saveAsNote": "Save as note",
+      "description": "Structured data — artists, makers, places, authority IDs"
+    },
+    "explore": {
+      "getty": "Getty AAT",
+      "europeana": "Europeana",
+      "wikidata": "Wikidata"
+    },
+    "settings": {
+      "title": "AI Assistant",
+      "description": "Configure your AI provider for the Research assistant. Keys are encrypted at rest.",
+      "provider": "Provider",
+      "model": "Model",
+      "modelCustomPlaceholder": "e.g. llama3.2, mistral",
+      "apiKey": "API Key",
+      "apiKeyExisting": "(leave blank to keep existing)",
+      "apiKeyPlaceholder": "sk-ant-…",
+      "baseUrl": "Ollama base URL",
+      "baseUrlPlaceholder": "http://localhost:11434/v1",
+      "saveSettings": "Save settings",
+      "updateSettings": "Update settings",
+      "saving": "Saving…",
+      "removeKey": "Remove key",
+      "removing": "Removing…",
+      "keySaved": "API key saved ·"
+    },
+    "objectTab": {
+      "title": "Research Notes",
+      "newNote": "New note",
+      "researchWithAI": "Research with AI",
+      "loading": "Loading…",
+      "empty": {
+        "message": "No research notes linked to this object yet.",
+        "cta": "Create the first note →"
+      },
+      "shortcuts": {
+        "wikipedia": "Search Wikipedia",
+        "getty": "Getty AAT",
+        "wikidata": "Wikidata"
+      }
+    },
+    "objectList": {
+      "research": "Research"
+    }
   }
 }

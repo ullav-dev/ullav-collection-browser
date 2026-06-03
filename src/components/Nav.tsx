@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { usePathname, useRouter, Link } from "@/i18n/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 import UserAvatar, { userDisplayName } from "@/components/UserAvatar";
@@ -32,6 +32,7 @@ export default function Nav() {
   const router = useRouter();
   const locale = useLocale();
   const { user, token, roles, isLoading, logout } = useAuth();
+  const t = useTranslations("nav");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -80,18 +81,11 @@ export default function Nav() {
           <nav className="flex items-center gap-4">
             {!isLoading && user ? (
               <>
-                <Link href="/objects" className={navLink("/objects")}>
-                  Collection
-                </Link>
-                <Link href="/locations" className={navLink("/locations")}>
-                  Locations
-                </Link>
-                <Link href="/entries" className={navLink("/entries")}>
-                  Entries
-                </Link>
-                <Link href="/acquisitions" className={navLink("/acquisitions")}>
-                  Acquisitions
-                </Link>
+                <Link href="/objects" className={navLink("/objects")}>{t("collection")}</Link>
+                <Link href="/locations" className={navLink("/locations")}>{t("locations")}</Link>
+                <Link href="/entries" className={navLink("/entries")}>{t("entries")}</Link>
+                <Link href="/acquisitions" className={navLink("/acquisitions")}>{t("acquisitions")}</Link>
+                <Link href="/research" className={navLink("/research")}>{t("research")}</Link>
 
                 {/* Comad (DAM) button */}
                 <button
@@ -133,25 +127,17 @@ export default function Nav() {
 
                   {dropdownOpen && (
                     <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl border border-slate-200 shadow-lg py-1 z-50">
-                      <DropdownLink href="/parties" onClick={() => setDropdownOpen(false)}>
-                        Parties
-                      </DropdownLink>
-                      <DropdownLink href="/settings" onClick={() => setDropdownOpen(false)}>
-                        Settings
-                      </DropdownLink>
+                      <DropdownLink href="/parties" onClick={() => setDropdownOpen(false)}>{t("parties")}</DropdownLink>
+                      <DropdownLink href="/settings" onClick={() => setDropdownOpen(false)}>Settings</DropdownLink>
                       <div className="my-1 border-t border-slate-100" />
-                      <DropdownButton onClick={handleLogout} destructive>
-                        Sign out
-                      </DropdownButton>
+                      <DropdownButton onClick={handleLogout} destructive>{t("signOut")}</DropdownButton>
                     </div>
                   )}
                 </div>
               </>
             ) : !isLoading ? (
               <>
-                <Link href="/browse" className={navLink("/browse")}>
-                  Browse Collection
-                </Link>
+                <Link href="/browse" className={navLink("/browse")}>{t("browse")}</Link>
                 <Link
                   href="/login"
                   className={`text-sm font-medium px-4 py-1.5 rounded-lg border transition-colors ${
@@ -160,7 +146,7 @@ export default function Nav() {
                       : "border-slate-300 text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  Sign in
+                  {t("signIn")}
                 </Link>
               </>
             ) : null}
