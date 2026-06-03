@@ -3,11 +3,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import Modal from "@/components/Modal";
+import DamPickerPanel from "@/components/DamPickerPanel";
 import {
   getObject,
   updateObject,
   assignAccession,
   listNumberSchemes,
+  setObjectPrimaryAsset,
+  removeObjectAsset,
   type CollectionObject,
   type NumberScheme,
   type UpdateObjectRequest,
@@ -41,6 +45,9 @@ export default function EditObjectPage({ params }: { params: Promise<{ id: strin
   const [saveError, setSaveError] = useState<string | null>(null);
   const [assigningAccession, setAssigningAccession] = useState(false);
   const [selectedSchemeId, setSelectedSchemeId] = useState<string>("");
+  const [accessionSuccess, setAccessionSuccess] = useState<string | null>(null);
+  const [primaryAssetId, setPrimaryAssetId] = useState<string | null>(null);
+  const [assetSaving, setAssetSaving] = useState(false);
 
   // Form state — initialised from object once loaded
   const [title, setTitle] = useState("");
@@ -90,6 +97,7 @@ export default function EditObjectPage({ params }: { params: Promise<{ id: strin
       setCopyrightStatus(obj.copyright_status ?? "");
       setStatus(obj.status);
       setIsPublic(obj.is_public);
+      setPrimaryAssetId(obj.primary_image_asset_id ?? null);
       // Pre-select default scheme
       const def = schemesData.find((s) => s.is_default);
       if (def) setSelectedSchemeId(def.id);
@@ -133,6 +141,36 @@ export default function EditObjectPage({ params }: { params: Promise<{ id: strin
     }
   }
 
+  async function handleAssetSelect(asset: import("@ullav-dev/dam-picker").PickedAsset) {
+    if (!token || !id) return;
+    setAssetSaving(true);
+    try {
+      await setObjectPrimaryAsset(token, id, {
+        asset_id: asset.id,
+        asset_name: asset.name,
+        asset_type: asset.assetType,
+      });
+      setPrimaryAssetId(asset.id);
+    } catch {
+      // non-critical — picker stays open, user can retry
+    } finally {
+      setAssetSaving(false);
+    }
+  }
+
+  async function handleRemoveAsset() {
+    if (!token || !id || !primaryAssetId) return;
+    setAssetSaving(true);
+    try {
+      await removeObjectAsset(token, id, primaryAssetId);
+      setPrimaryAssetId(null);
+    } catch {
+      // non-critical
+    } finally {
+      setAssetSaving(false);
+    }
+  }
+
   async function handleAssignAccession() {
     if (!token || !id) return;
     setAssigningAccession(true);
@@ -143,7 +181,7 @@ export default function EditObjectPage({ params }: { params: Promise<{ id: strin
       const updated = await getObject(token, id);
       setObject(updated);
       setSaveError(null);
-      alert(`Accession number assigned: ${result.accession_number}`);
+      setAccessionSuccess(result.accession_number);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Failed to assign accession number");
     } finally {
@@ -227,6 +265,48 @@ export default function EditObjectPage({ params }: { params: Promise<{ id: strin
                 </p>
               )}
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Primary image */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-6">
+        <h2 className="font-semibold text-slate-700 text-sm mb-3">Primary image</h2>
+        {primaryAssetId ? (
+          <div className="flex items-start gap-4">
+            <img
+              src={`/api/dam/assets/${primaryAssetId}/thumbnail`}
+              alt="Primary image"
+              className="w-24 h-24 object-cover rounded-lg border border-slate-200 bg-slate-50"
+            />
+            <div className="flex flex-col gap-2">
+              <p className="text-xs text-slate-500">This image will appear in the object list.</p>
+              <button
+                type="button"
+                onClick={handleRemoveAsset}
+                disabled={assetSaving}
+                className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors self-start"
+              >
+                {assetSaving ? "Removing…" : "Remove image"}
+              </button>
+              <div className="mt-1">
+                <DamPickerPanel
+                  token={token!}
+                  username={user.username}
+                  onSelect={handleAssetSelect}
+                  label="Change image…"
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <p className="text-sm text-slate-500 mb-3">No primary image set.</p>
+            <DamPickerPanel
+              token={token!}
+              username={user.username}
+              onSelect={handleAssetSelect}
+            />
           </div>
         )}
       </div>
@@ -330,6 +410,29 @@ export default function EditObjectPage({ params }: { params: Promise<{ id: strin
           </Link>
         </div>
       </form>
+
+      {accessionSuccess && (
+        <Modal title="Accession number assigned" onClose={() => setAccessionSuccess(null)} width="sm">
+          <div className="flex flex-col items-center gap-4 py-2 text-center">
+            <div className="w-12 h-12 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center">
+              <svg className="w-6 h-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-sm text-slate-600">This object has been assigned accession number:</p>
+            <span className="font-mono text-base font-semibold text-teal-700 bg-teal-50 px-4 py-2 rounded-lg border border-teal-200">
+              {accessionSuccess}
+            </span>
+            <button
+              type="button"
+              onClick={() => setAccessionSuccess(null)}
+              className="mt-1 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

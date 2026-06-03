@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { createObject, type CreateObjectRequest } from "@/lib/collection-api";
+import { createObject, setObjectPrimaryAsset, type CreateObjectRequest } from "@/lib/collection-api";
+import DamPickerPanel from "@/components/DamPickerPanel";
+import type { PickedAsset } from "@ullav-dev/dam-picker";
 
 const inputCls =
   "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm w-full focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500";
@@ -27,6 +29,7 @@ export default function NewObjectPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pickedAsset, setPickedAsset] = useState<PickedAsset | null>(null);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -69,6 +72,13 @@ export default function NewObjectPage() {
         is_public: isPublic,
       };
       const obj = await createObject(token, body);
+      if (pickedAsset) {
+        await setObjectPrimaryAsset(token, obj.id, {
+          asset_id: pickedAsset.id,
+          asset_name: pickedAsset.name,
+          asset_type: pickedAsset.assetType,
+        });
+      }
       router.push(`/objects/${obj.id}` as never);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create object");
@@ -158,6 +168,43 @@ export default function NewObjectPage() {
           />
           <span className="text-sm text-slate-700">Publish to public portal</span>
         </label>
+
+        <div className="border-t border-slate-100 pt-4">
+          <p className="text-sm font-medium text-slate-700 mb-2">Primary image</p>
+          {pickedAsset ? (
+            <div className="flex items-start gap-4">
+              <img
+                src={pickedAsset.thumbnailUrl}
+                alt={pickedAsset.name}
+                className="w-20 h-20 object-cover rounded-lg border border-slate-200 bg-slate-50"
+              />
+              <div className="flex flex-col gap-1">
+                <p className="text-sm text-slate-700 font-medium">{pickedAsset.name}</p>
+                <button
+                  type="button"
+                  onClick={() => setPickedAsset(null)}
+                  className="text-xs text-red-500 hover:text-red-700 transition-colors self-start"
+                >
+                  Remove
+                </button>
+                <div className="mt-1">
+                  <DamPickerPanel
+                    token={token!}
+                    username={user.username}
+                    onSelect={setPickedAsset}
+                    label="Change image…"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <DamPickerPanel
+              token={token!}
+              username={user.username}
+              onSelect={setPickedAsset}
+            />
+          )}
+        </div>
 
         <div className="flex gap-3 pt-2">
           <button

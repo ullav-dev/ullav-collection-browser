@@ -195,6 +195,7 @@ export default function ObjectsPage() {
                     className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                   />
                 </th>
+                <th className="px-3 py-3 w-10" />
                 <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wide">Accession #</th>
                 <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wide">Title</th>
                 <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wide hidden sm:table-cell">Object name</th>
@@ -220,6 +221,22 @@ export default function ObjectsPage() {
                       onChange={() => toggle(obj.id)}
                       className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                     />
+                  </td>
+                  <td className="px-3 py-2">
+                    {obj.primary_image_asset_id ? (
+                      <img
+                        src={`/api/dam/assets/${obj.primary_image_asset_id}/thumbnail`}
+                        alt=""
+                        className="w-8 h-8 object-cover rounded border border-slate-200 bg-slate-100"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded border border-slate-100 bg-slate-50 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 3h18M3 21h18" />
+                        </svg>
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-slate-500">
                     {obj.accession_number ?? <span className="text-slate-300">—</span>}

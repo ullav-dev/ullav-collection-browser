@@ -13,6 +13,7 @@ const gitSha: string = (() => {
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  transpilePackages: ["@ullav-dev/dam-picker"],
   env: {
     NEXT_PUBLIC_APP_VERSION: appVersion,
     NEXT_PUBLIC_GIT_SHA: gitSha,

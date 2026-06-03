@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   getObject, getObjectMovements, getObjectParts,
@@ -49,8 +50,9 @@ function SectionEmpty({ message }: { message: string }) {
 }
 
 export default function ObjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { user, token, isLoading } = useAuth();
+  const { user, token, roles, isLoading } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
   const [id, setId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("details");
 
@@ -221,6 +223,43 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
           </Link>
         </div>
       </div>
+
+      {/* Primary image */}
+      {object.primary_image_asset_id && (
+        <div className="mb-6 flex gap-4 items-start">
+          <img
+            src={`/api/dam/assets/${object.primary_image_asset_id}/thumbnail`}
+            alt={object.title}
+            className="rounded-xl border border-slate-200 bg-slate-50 object-contain max-h-64 max-w-xs shadow-sm"
+          />
+          <div className="flex flex-col gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                if (!token || !user) return;
+                const damBrowserUrl = (window as unknown as Record<string, Record<string, string>>).__ENV__?.DAM_BROWSER_URL ?? "https://comad.ullav.com";
+                const session = encodeURIComponent(JSON.stringify({ token, user, roles }));
+                window.open(
+                  `${damBrowserUrl}/${locale}/auth/sso?t=${session}&select_asset=${object.primary_image_asset_id}`,
+                  "cartlann_comad",
+                  "noopener",
+                );
+              }}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:text-blue-800 border border-blue-200 hover:border-blue-300 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="32" cy="32" r="32" fill="#1d4ed8"/>
+                <rect x="10" y="22" width="44" height="30" rx="4" fill="#93c5fd"/>
+                <path d="M10 22 L10 18 Q10 15 13 15 L26 15 Q29 15 30 18 L31 22 Z" fill="#bfdbfe"/>
+                <rect x="16" y="28" width="32" height="18" rx="2" fill="#1e40af"/>
+                <path d="M20 42 L28 32 L34 38 L38 34 L44 42 Z" fill="#60a5fa"/>
+                <circle cx="38" cy="32" r="3" fill="#fbbf24"/>
+              </svg>
+              Open in Comad
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-0 mb-6 border-b border-slate-200 overflow-x-auto">

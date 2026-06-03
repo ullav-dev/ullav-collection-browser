@@ -48,6 +48,18 @@ export interface CollectionObject {
   is_public: boolean;
   created_at: string;
   updated_at: string;
+  primary_image_asset_id?: string | null;
+}
+
+export interface ObjectAsset {
+  id: string;
+  object_id: string;
+  asset_id: string;
+  asset_name: string | null;
+  asset_type: string | null;
+  is_primary: boolean;
+  sort_order: number;
+  created_at: string;
 }
 
 export interface ConditionCheck {
@@ -392,3 +404,21 @@ export const assignAccession = (token: string, objectId: string, schemeId?: stri
     method: "POST",
     body: JSON.stringify({ scheme_id: schemeId ?? null }),
   });
+
+// ── Object ↔ DAM asset associations ──────────────────────────────────────────
+
+export const listObjectAssets = (token: string, objectId: string): Promise<ObjectAsset[]> =>
+  apiRequest(`/objects/${objectId}/assets`, token);
+
+export const setObjectPrimaryAsset = (
+  token: string,
+  objectId: string,
+  asset: { asset_id: string; asset_name?: string; asset_type?: string },
+): Promise<ObjectAsset> =>
+  apiRequest(`/objects/${objectId}/assets`, token, {
+    method: "POST",
+    body: JSON.stringify({ ...asset, is_primary: true }),
+  });
+
+export const removeObjectAsset = (token: string, objectId: string, assetId: string): Promise<void> =>
+  apiRequest(`/objects/${objectId}/assets/${assetId}`, token, { method: "DELETE" });

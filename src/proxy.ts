@@ -8,6 +8,14 @@ const intlMiddleware = createMiddleware(routing);
 function route(request: NextRequest): NextResponse {
   const { pathname, search } = request.nextUrl;
 
+  // Proxy /api/dam/* → ullav-dam-server (strips /api/dam prefix)
+  if (pathname.startsWith("/api/dam/")) {
+    const damUrl = process.env.DAM_URL ?? "http://localhost:8080";
+    return NextResponse.rewrite(
+      new URL(pathname.slice("/api/dam".length) + search, damUrl)
+    );
+  }
+
   // Proxy /api/* → ullav-collection-server (strips /api prefix)
   if (pathname.startsWith("/api/")) {
     const apiUrl = process.env.API_URL ?? "http://localhost:8084";

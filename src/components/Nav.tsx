@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { usePathname, useRouter, Link } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 import UserAvatar, { userDisplayName } from "@/components/UserAvatar";
+
+// Named window target — browser reuses the same tab if it's already open.
+const COMAD_WINDOW_NAME = "cartlann_comad";
 
 // Cartlann SVG logo — teal archive/collection motif
 function CartlannIcon({ className = "w-7 h-7" }: { className?: string }) {
@@ -26,9 +30,18 @@ function CartlannIcon({ className = "w-7 h-7" }: { className?: string }) {
 export default function Nav() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isLoading, logout } = useAuth();
+  const locale = useLocale();
+  const { user, token, roles, isLoading, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const openComad = useCallback(() => {
+    if (!token || !user) return;
+    const damBrowserUrl = (window as unknown as Record<string, Record<string, string>>).__ENV__?.DAM_BROWSER_URL ?? "https://comad.ullav.com";
+    const session = encodeURIComponent(JSON.stringify({ token, user, roles }));
+    // Named target reuses the tab if it's already open; noopener for security.
+    window.open(`${damBrowserUrl}/${locale}/auth/sso?t=${session}`, COMAD_WINDOW_NAME, "noopener");
+  }, [token, user, roles, locale]);
 
   useEffect(() => {
     if (!dropdownOpen) return;
@@ -79,6 +92,24 @@ export default function Nav() {
                 <Link href="/acquisitions" className={navLink("/acquisitions")}>
                   Acquisitions
                 </Link>
+
+                {/* Comad (DAM) button */}
+                <button
+                  type="button"
+                  onClick={openComad}
+                  title="Open Comad media library"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:text-blue-800 border border-blue-200 hover:border-blue-300 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="32" cy="32" r="32" fill="#1d4ed8"/>
+                    <rect x="10" y="22" width="44" height="30" rx="4" fill="#93c5fd"/>
+                    <path d="M10 22 L10 18 Q10 15 13 15 L26 15 Q29 15 30 18 L31 22 Z" fill="#bfdbfe"/>
+                    <rect x="16" y="28" width="32" height="18" rx="2" fill="#1e40af"/>
+                    <path d="M20 42 L28 32 L34 38 L38 34 L44 42 Z" fill="#60a5fa"/>
+                    <circle cx="38" cy="32" r="3" fill="#fbbf24"/>
+                  </svg>
+                  <span className="hidden sm:block">Comad</span>
+                </button>
 
                 {/* User dropdown */}
                 <div className="relative pl-3 border-l border-slate-200" ref={dropdownRef}>

@@ -211,19 +211,114 @@ export async function generateLabelPDF(
   return doc.output("blob");
 }
 
-/** Generate a single preview label as a data URL (PNG) — used for the modal preview. */
+/** Generate a single preview label as a PNG data URL — used for the modal preview.
+ *  Renders directly to a canvas (not jsPDF) so the result works in an <img> tag. */
 export async function generatePreviewDataUrl(
   obj: LabelObject,
   options: Pick<LabelOptions, "type" | "size">,
 ): Promise<string> {
-  const { jsPDF } = await import("jspdf");
   const bwipjs = await import("bwip-js/browser");
   const { w, h } = SIZES[options.size];
-  // Render at 4× scale for a crisp preview
-  const scale = 4;
-  const doc = new jsPDF({ unit: "mm", format: [w + 4, h + 4], orientation: "portrait" });
-  await drawLabel(doc, bwipjs, obj, 2, 2, options.size, options.type, "Cartlann Collection");
-  return doc.output("datauristring");
+
+  const PX = 4; // px per mm
+  const pad = 2; // mm border padding around the label
+  const canvas = document.createElement("canvas");
+  canvas.width  = (w + pad * 2) * PX;
+  canvas.height = (h + pad * 2) * PX;
+  const ctx = canvas.getContext("2d")!;
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const mm = (v: number) => v * PX;
+  const lx = mm(pad), ly = mm(pad), lw = mm(w), lh = mm(h);
+
+  // Border
+  ctx.strokeStyle = "#cccccc";
+  ctx.lineWidth = 0.8;
+  ctx.strokeRect(lx, ly, lw, lh);
+
+  const codeText = obj.accession_number ?? obj.id.slice(0, 13).toUpperCase();
+  const hasAcc   = !!obj.accession_number;
+  const p        = mm(1.5); // inner padding px
+
+  async function renderCode(bcid: string, text: string, opts: Record<string, unknown> = {}): Promise<HTMLCanvasElement | null> {
+    const tmp = document.createElement("canvas");
+    try { bwipjs.toCanvas(tmp, { bcid, text, scale: 3, ...opts }); return tmp; }
+    catch { return null; }
+  }
+
+  if (options.size === "small") {
+    const bar = await renderCode("code128", codeText, { height: 8, includetext: false });
+    if (bar) ctx.drawImage(bar, lx + p, ly + p, lw - p * 2, lh - mm(7));
+    ctx.font      = `bold ${mm(2.2)}px "Courier New", monospace`;
+    ctx.textAlign = "center";
+    ctx.fillStyle = hasAcc ? "#1e1e1e" : "#646464";
+    ctx.fillText(codeText, lx + lw / 2, ly + lh - p);
+
+  } else if (options.size === "medium") {
+    if (options.type !== "barcode") {
+      const qr = await renderCode("qrcode", codeText, { scale: 4 });
+      if (qr) { const s = lh - p * 2; ctx.drawImage(qr, lx + p, ly + p, s, s); }
+    }
+    const tx  = options.type === "barcode" ? lx + p : lx + (lh - p) + mm(2);
+    const tw  = options.type === "barcode" ? lw - p * 2 : lw - (lh - p) - mm(3);
+    if (options.type !== "qr") {
+      const bar = await renderCode("code128", codeText, { height: 6, includetext: false });
+      if (bar) {
+        const bx = options.type === "both" ? lx + (lh - p) + mm(1) : lx + p;
+        const bw = options.type === "both" ? tw : lw - p * 2;
+        ctx.drawImage(bar, bx, ly + lh - mm(10), bw, mm(7));
+      }
+    }
+    const fz = options.type === "both" ? mm(2.2) : mm(2.8);
+    ctx.font      = `bold ${fz}px "Courier New", monospace`;
+    ctx.textAlign = "left";
+    ctx.fillStyle = hasAcc ? "#0a0a0a" : "#646464";
+    ctx.fillText(codeText, tx, ly + p + mm(4), tw);
+    ctx.font      = `${mm(2.2)}px Arial, sans-serif`;
+    ctx.fillStyle = "#3c3c3c";
+    // Two-line word-wrap
+    let line = "", lineY = ly + p + mm(10);
+    for (const word of obj.title.split(" ")) {
+      const test = line ? `${line} ${word}` : word;
+      if (ctx.measureText(test).width > tw && line) {
+        ctx.fillText(line, tx, lineY); line = word; lineY += mm(4);
+        if (lineY > ly + lh - p) break;
+      } else { line = test; }
+    }
+    if (line && lineY <= ly + lh - p) ctx.fillText(line, tx, lineY);
+
+  } else {
+    // Large
+    const qrS = mm(25);
+    if (options.type !== "barcode") {
+      const qr = await renderCode("qrcode", codeText, { scale: 5 });
+      if (qr) ctx.drawImage(qr, lx + lw - qrS - p, ly + p, qrS, qrS);
+    }
+    ctx.font      = `bold ${mm(4)}px "Courier New", monospace`;
+    ctx.textAlign = "left";
+    ctx.fillStyle = hasAcc ? "#0a0a0a" : "#646464";
+    ctx.fillText(codeText, lx + p, ly + p + mm(6));
+    if (obj.object_name) {
+      ctx.font      = `bold ${mm(3)}px Arial, sans-serif`;
+      ctx.fillStyle = "#0f766e";
+      ctx.fillText(obj.object_name, lx + p, ly + p + mm(12));
+    }
+    ctx.font      = `${mm(3)}px Arial, sans-serif`;
+    ctx.fillStyle = "#3c3c3c";
+    ctx.fillText(obj.title.slice(0, 28), lx + p, ly + p + mm(18));
+    if (options.type !== "qr") {
+      const bar = await renderCode("code128", codeText, { height: 8, includetext: false });
+      if (bar) ctx.drawImage(bar, lx + p, ly + lh - mm(12), lw - p * 2, mm(9));
+    }
+    ctx.font      = `${mm(2)}px Arial, sans-serif`;
+    ctx.fillStyle = "#969696";
+    ctx.textAlign = "center";
+    ctx.fillText("Cartlann Collection", lx + lw / 2, ly + lh - p);
+  }
+
+  return canvas.toDataURL("image/png");
 }
 
 export function labelsPerPage(size: LabelSize): number {
