@@ -18,10 +18,16 @@ import {
 
 export type CartlannRole = "admin" | "curator" | "registrar" | "viewer";
 
+export interface TeamInfo {
+  id: string;
+  name: string;
+}
+
 interface CollectionContextValue {
   collections: Collection[];
   activeCollection: Collection | null;
   userRole: CartlannRole | null;
+  teams: TeamInfo[];
   isLoading: boolean;
   switchCollection: (id: string) => void;
   refresh: () => Promise<void>;
@@ -74,6 +80,7 @@ const CollectionContext = createContext<CollectionContextValue>({
   collections: [],
   activeCollection: null,
   userRole: null,
+  teams: [],
   isLoading: true,
   switchCollection: () => {},
   refresh: async () => {},
@@ -144,9 +151,14 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
       ? deriveRole(token, activeCollection.team_id)
       : null;
 
+  // Build a deduplicated list of teams the user belongs to (from JWT).
+  const teams: TeamInfo[] = token
+    ? Object.entries(teamsFromToken(token)).map(([id, t]) => ({ id, name: t.name }))
+    : [];
+
   return (
     <CollectionContext.Provider
-      value={{ collections, activeCollection, userRole, isLoading, switchCollection, refresh }}
+      value={{ collections, activeCollection, userRole, teams, isLoading, switchCollection, refresh }}
     >
       {children}
     </CollectionContext.Provider>
