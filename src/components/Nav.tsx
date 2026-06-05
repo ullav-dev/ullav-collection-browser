@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCollection } from "@/contexts/CollectionContext";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 import UserAvatar, { userDisplayName } from "@/components/UserAvatar";
+import AboutModal from "@/components/AboutModal";
 
 // Named window target — browser reuses the same tab if it's already open.
 const COMAD_WINDOW_NAME = "cartlann_comad";
@@ -37,6 +38,7 @@ export default function Nav() {
   const t = useTranslations("nav");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [collectionOpen, setCollectionOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const collectionRef = useRef<HTMLDivElement>(null);
 
@@ -196,11 +198,13 @@ export default function Nav() {
                     <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl border border-slate-200 shadow-lg py-1 z-50">
                       <DropdownLink href="/parties" onClick={() => setDropdownOpen(false)}>{t("parties")}</DropdownLink>
                       <DropdownLink href="/settings" onClick={() => setDropdownOpen(false)}>Settings</DropdownLink>
+                      <DropdownButton onClick={() => { setDropdownOpen(false); setAboutOpen(true); }}>{t("about")}</DropdownButton>
                       <div className="my-1 border-t border-slate-100" />
                       <DropdownButton onClick={handleLogout} destructive>{t("signOut")}</DropdownButton>
                     </div>
                   )}
                 </div>
+                {aboutOpen && <AboutModal user={user} onClose={() => setAboutOpen(false)} />}
               </>
             ) : !isLoading ? (
               <>

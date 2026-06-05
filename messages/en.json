@@ -8,7 +8,17 @@
     "browse": "Browse",
     "signIn": "Sign in",
     "signOut": "Sign out",
-    "research": "Research"
+    "research": "Research",
+    "about": "About Cartlann"
+  },
+  "about": {
+    "tagline": "Collection Management",
+    "version": "Version",
+    "build": "Build",
+    "user": "Signed in as",
+    "support": "Support",
+    "contact": "Contact",
+    "close": "Close"
   },
   "localeSwitcher": {
     "label": "Language",

@@ -8,7 +8,17 @@
     "browse": "Brabhsáil",
     "signIn": "Sínigh isteach",
     "signOut": "Sínigh amach",
-    "research": "Taighde"
+    "research": "Taighde",
+    "about": "Faoi Cartlann"
+  },
+  "about": {
+    "tagline": "Bainistíocht Cnuasaigh",
+    "version": "Leagan",
+    "build": "Tógáil",
+    "user": "Sínithe isteach mar",
+    "support": "Tacaíocht",
+    "contact": "Teagmháil",
+    "close": "Dún"
   },
   "localeSwitcher": {
     "label": "Teanga",
