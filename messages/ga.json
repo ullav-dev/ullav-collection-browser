@@ -1,0 +1,245 @@
+{
+  "nav": {
+    "collection": "Cnuasach",
+    "locations": "Suímhanna",
+    "entries": "Iontrála",
+    "acquisitions": "Fáltais",
+    "parties": "Páirtithe",
+    "browse": "Brabhsáil",
+    "signIn": "Sínigh isteach",
+    "signOut": "Sínigh amach",
+    "research": "Taighde",
+    "about": "Faoi Cartlann"
+  },
+  "about": {
+    "tagline": "Bainistíocht Cnuasaigh",
+    "version": "Leagan",
+    "build": "Tógáil",
+    "user": "Sínithe isteach mar",
+    "support": "Tacaíocht",
+    "contact": "Teagmháil",
+    "close": "Dún"
+  },
+  "localeSwitcher": {
+    "label": "Teanga",
+    "en": "EN",
+    "de": "DE",
+    "ga": "GA"
+  },
+  "footer": {
+    "copyright": "© {year} Ullav. Gach ceart ar cosnamh."
+  },
+  "research": {
+    "title": "Taighde",
+    "currentObject": {
+      "researching": "Ag taighde ar:",
+      "none": "Gan réad roghnaithe — téigh go dtí réad agus cliceáil Taighde chun comhthéacs a shocrú.",
+      "clear": "Glan réad reatha"
+    },
+    "tabs": {
+      "notes": "Nótaí",
+      "ai": "Cúntóir AI",
+      "wikipedia": "Vicipéid",
+      "explore": "Iniúchadh"
+    },
+    "folders": {
+      "allNotes": "Gach Nóta",
+      "unfiled": "Gan Chomhad",
+      "sharedByMe": "Roinnte agam",
+      "sharedByOthers": "Roinnte ag daoine eile",
+      "newFolder": "Fillteán Nua",
+      "folderPlaceholder": "Ainm fillteáin…",
+      "rename": "Athainmnigh",
+      "deleteFolder": "Scrios fillteán"
+    },
+    "notes": {
+      "new": "Nua",
+      "noNotes": "Gan nótaí anseo.",
+      "createOne": "Cruthaigh ceann →",
+      "selectOrCreate": "Roghnaigh nóta nó cruthaigh ceann nua le tosú.",
+      "newNote": "+ Nóta Nua"
+    },
+    "editor": {
+      "newNote": "Nóta Nua",
+      "editNote": "Eagar Nóta",
+      "title": "Teideal",
+      "titlePlaceholder": "Teideal an nóta…",
+      "titleRequired": "Tá teideal ag teastáil",
+      "description": "Cur síos",
+      "descriptionPlaceholder": "Fotheideal nó achoimre ghearr…",
+      "content": "Ábhar",
+      "contentPlaceholder": "Scríobh do nótaí taighde i Markdown…",
+      "folder": "Fillteán",
+      "unfiled": "Gan Chomhad",
+      "shareWithInstitution": "Roinn leis an institiúid",
+      "linkedObjects": "Réada Nasctha",
+      "linkObject": "Nasc réad",
+      "objectSearchPlaceholder": "Cuardaigh réada…",
+      "objectSearchHint": "Clóscríobh 2 charachtar ar a laghad",
+      "noObjectMatches": "Gan torthaí",
+      "save": "Sábháil",
+      "saving": "Ag sábháil…",
+      "cancel": "Cealaigh",
+      "deleteNote": "Scrios nóta",
+      "deleteConfirm": "An réad an nóta seo?",
+      "deleteConfirmBtn": "Deimhnigh"
+    },
+    "viewer": {
+      "edit": "Eagar",
+      "digDeeper": "Tochail Níos Doimhne",
+      "shared": "Roinnte",
+      "noContent": "Gan ábhar fós. Cliceáil Eagar chun nótaí a chur leis.",
+      "linkedObjects": "réad{count, plural, =1 {} other {a}} nasctha"
+    },
+    "thread": {
+      "noReplies": "Gan freagraí fós",
+      "replies": "{count} {count, plural, =1 {freagra} other {freagra}}",
+      "replyPlaceholder": "Cuir freagra leis (tacaíonn Markdown)…",
+      "reply": "Freagair",
+      "replying": "…",
+      "loadingReplies": "Ag lódáil freagraí…"
+    },
+    "markdown": {
+      "preview": "Réamhamharc",
+      "edit": "Eagar",
+      "placeholder": "Scríobh i Markdown…",
+      "nothingToPreview": "Gan rud le réamhamharc."
+    },
+    "ai": {
+      "title": "Cúntóir AI",
+      "history": "Stair",
+      "historyEmpty": "Gan seisiúin shábháilte",
+      "clearChat": "Glan",
+      "saveConversation": "Sábháil comhrá",
+      "collectionContextToggle": "Cuir comhthéacs cnuasaigh leis",
+      "collectionContextEnabled": "Cnuasach ({count} réad)",
+      "notConfigured": {
+        "title": "Cúntóir AI gan chumrú",
+        "hint": "Cuir do eochair API leis sna Socruithe chun an cúntóir taighde AI a chumasú.",
+        "goToSettings": "Téigh go Socruithe →"
+      },
+      "checkingConfig": "Ag seiceáil cumraíocht AI…",
+      "emptyHint": "Cuir ceisteanna faoi phróvéanas, sannadh, caighdeáin chatalógaithe nó dlí maoine cultúrtha.",
+      "researchingObject": "Ag taighde ar: {objectTitle}",
+      "objectContextHint": "Tá sonraí an réada luchtaithe mar chomhthéacs. Cuir ceisteanna faoi phróvéanas, sannadh, ábhair nó doiciméadú catalóige.",
+      "placeholder": "Cuir ceisteanna faoi phróvéanas, sannadh, catalógú…",
+      "placeholderWithObject": "Cuir ceisteanna faoi {objectTitle}…",
+      "send": "Seol",
+      "saveAsNote": "Sábháil mar nóta",
+      "savedNoteTitle": "Taighde AI — {date}",
+      "savedNoteDescription": "Sábháilte ón gCúntóir AI",
+      "savedConversationTitle": "Comhrá AI — {date}",
+      "savedConversationDescription": "Comhrá taighde ({count} teachtaireacht)",
+      "promptTemplates": "Teimpléid aisce",
+      "promptTemplatesHide": "Folaigh teimpléid",
+      "aiSettings": "Socruithe AI",
+      "you": "Tú",
+      "ai": "AI",
+      "suggestions": [
+        "Cé na taifid phróvénais ba chóir dom a lorg?",
+        "Conas seiceáil an Art Loss Register?",
+        "Mínigh caighdeáin chatalógaithe Spectrum"
+      ]
+    },
+    "wikipedia": {
+      "searchPlaceholder": "Cuardaigh Vicipéid…",
+      "searching": "Ag cuardach…",
+      "title": "Vicipéid",
+      "prompt": "Cuardaigh Vicipéid chun cúlra a fháil ar ealaíontóirí, déantóirí, tréimhsí stairiúla, áiteanna nó ábhair.",
+      "noResults": "Gan torthaí do \"{query}\"",
+      "selectResult": "Roghnaigh toradh chun an t-alt a léamh",
+      "loading": "Alt á luchtú…",
+      "openInWikipedia": "Oscail in Vicipéid ↗",
+      "saveAsNote": "Sábháil mar nóta"
+    },
+    "getty": {
+      "searchPlaceholder": "Cuardaigh téarmaí AAT — m.sh. airgead, péint ola, portráid…",
+      "searching": "Ag cuardach…",
+      "title": "Getty Art & Architecture Thesaurus",
+      "prompt": "Cuardaigh stór focal rialaithe — cineálacha réad, ábhair, teicnící, stíleanna agus tréimhsí in ealaín agus catalógú ailtireachta.",
+      "noResults": "Gan téarmaí AAT do \"{query}\"",
+      "selectTerm": "Roghnaigh téarma chun a mhíniú a fheiceáil",
+      "hierarchy": "Ordlathas",
+      "definition": "Sainmhíniú",
+      "viewInGetty": "Féach in Getty ↗",
+      "saveAsNote": "Sábháil mar nóta",
+      "description": "Stór focal rialaithe d'ealaín agus ailtireacht"
+    },
+    "europeana": {
+      "searchPlaceholder": "Cuardaigh Europeana — m.sh. seodra Ceilteach, cré-earraí Rómhánach…",
+      "searching": "Ag cuardach…",
+      "title": "Oidhreacht Chultúrtha — Europeana",
+      "prompt": "Cuardaigh os cionn 50 milliún réad digitithe, saothair ealaíne, leabhair agus taifid ó mhúsaeim agus chartlanna ar fud na hEorpa.",
+      "noResults": "Gan torthaí do \"{query}\"",
+      "selectRecord": "Roghnaigh taifead chun sonraí a fheiceáil",
+      "allTypes": "Gach cineál",
+      "noApiKey": {
+        "title": "Eochair API Europeana gan chumrú",
+        "hint": "Cuir EUROPEANA_API_KEY le do chomhad .env.local. Faigh eochair saor in aisce ag apis.europeana.eu."
+      },
+      "institution": "Institiúid",
+      "date": "Dáta",
+      "country": "Tír",
+      "type": "Cineál",
+      "openInEuropeana": "Oscail in Europeana ↗",
+      "saveAsNote": "Sábháil mar nóta",
+      "description": "50M+ taifead digitithe ó mhúsaeim agus chartlanna Eorpacha"
+    },
+    "wikidata": {
+      "searchPlaceholder": "Cuardaigh Wikidata — ealaíontóirí, déantóirí, áiteanna, tréimhsí…",
+      "searching": "Ag cuardach…",
+      "title": "Cuardach Eintiteas Wikidata",
+      "prompt": "Cuardaigh ealaíontóirí, déantóirí, ríshleachta, áiteanna agus tréimhsí stairiúla. Faigheann sé sonraí údaráis struchtúrtha lena n-áirítear VIAF, ULAN agus aitheantóirí RKD.",
+      "noResults": "Gan torthaí do \"{query}\"",
+      "selectEntity": "Roghnaigh eintiteas chun sonraí a fheiceáil",
+      "loadingEntity": "Sonraí eintitis á luchtú…",
+      "born": "Rugadh",
+      "died": "Fuair bás",
+      "authorityIds": "Aitheantóirí údaráis",
+      "openInWikidata": "Oscail in Wikidata ↗",
+      "saveAsNote": "Sábháil mar nóta",
+      "description": "Sonraí struchtúrtha — ealaíontóirí, déantóirí, áiteanna, aitheantóirí údaráis"
+    },
+    "explore": {
+      "getty": "Getty AAT",
+      "europeana": "Europeana",
+      "wikidata": "Wikidata"
+    },
+    "settings": {
+      "title": "Cúntóir AI",
+      "description": "Cumraigh do sholáthraí AI don chúntóir taighde. Déantar eochracha a chriptiú.",
+      "provider": "Soláthraí",
+      "model": "Múnla",
+      "modelCustomPlaceholder": "m.sh. llama3.2, mistral",
+      "apiKey": "Eochair API",
+      "apiKeyExisting": "(fág folamh chun an eochair reatha a choimeád)",
+      "apiKeyPlaceholder": "sk-ant-…",
+      "baseUrl": "URL bunaidh Ollama",
+      "baseUrlPlaceholder": "http://localhost:11434/v1",
+      "saveSettings": "Sábháil socruithe",
+      "updateSettings": "Nuashonraigh socruithe",
+      "saving": "Ag sábháil…",
+      "removeKey": "Bain eochair",
+      "removing": "Á bhaint…",
+      "keySaved": "Eochair API sábháilte ·"
+    },
+    "objectTab": {
+      "title": "Nótaí Taighde",
+      "newNote": "Nóta nua",
+      "researchWithAI": "Taighde le AI",
+      "loading": "Ag lódáil…",
+      "empty": {
+        "message": "Gan nótaí taighde nasctha leis an réad seo fós.",
+        "cta": "Cruthaigh an chéad nóta →"
+      },
+      "shortcuts": {
+        "wikipedia": "Cuardaigh Vicipéid",
+        "getty": "Getty AAT",
+        "wikidata": "Wikidata"
+      }
+    },
+    "objectList": {
+      "research": "Taighde"
+    }
+  }
+}

@@ -1,0 +1,245 @@
+{
+  "nav": {
+    "collection": "Sammlung",
+    "locations": "Standorte",
+    "entries": "Eingänge",
+    "acquisitions": "Akquisitionen",
+    "parties": "Parteien",
+    "browse": "Durchsuchen",
+    "signIn": "Anmelden",
+    "signOut": "Abmelden",
+    "research": "Recherche",
+    "about": "Über Cartlann"
+  },
+  "about": {
+    "tagline": "Sammlungsverwaltung",
+    "version": "Version",
+    "build": "Build",
+    "user": "Angemeldet als",
+    "support": "Support",
+    "contact": "Kontakt",
+    "close": "Schließen"
+  },
+  "localeSwitcher": {
+    "label": "Sprache",
+    "en": "EN",
+    "de": "DE",
+    "ga": "GA"
+  },
+  "footer": {
+    "copyright": "© {year} Ullav. Alle Rechte vorbehalten."
+  },
+  "research": {
+    "title": "Recherche",
+    "currentObject": {
+      "researching": "Recherchiere:",
+      "none": "Kein Objekt ausgewählt — navigieren Sie zu einem Objekt und klicken Sie auf Recherche, um den Kontext festzulegen.",
+      "clear": "Objekt entfernen"
+    },
+    "tabs": {
+      "notes": "Notizen",
+      "ai": "KI-Assistent",
+      "wikipedia": "Wikipedia",
+      "explore": "Erkunden"
+    },
+    "folders": {
+      "allNotes": "Alle Notizen",
+      "unfiled": "Unsortiert",
+      "sharedByMe": "Von mir geteilt",
+      "sharedByOthers": "Von anderen geteilt",
+      "newFolder": "Neuer Ordner",
+      "folderPlaceholder": "Ordnername…",
+      "rename": "Umbenennen",
+      "deleteFolder": "Ordner löschen"
+    },
+    "notes": {
+      "new": "Neu",
+      "noNotes": "Keine Notizen hier.",
+      "createOne": "Erstellen →",
+      "selectOrCreate": "Wählen Sie eine Notiz aus oder erstellen Sie eine neue.",
+      "newNote": "+ Neue Notiz"
+    },
+    "editor": {
+      "newNote": "Neue Notiz",
+      "editNote": "Notiz bearbeiten",
+      "title": "Titel",
+      "titlePlaceholder": "Notizentitel…",
+      "titleRequired": "Titel ist erforderlich",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "Kurzer Untertitel oder Zusammenfassung…",
+      "content": "Inhalt",
+      "contentPlaceholder": "Recherchenotizen in Markdown schreiben…",
+      "folder": "Ordner",
+      "unfiled": "Unsortiert",
+      "shareWithInstitution": "Mit Institution teilen",
+      "linkedObjects": "Verknüpfte Objekte",
+      "linkObject": "Objekt verknüpfen",
+      "objectSearchPlaceholder": "Objekte suchen…",
+      "objectSearchHint": "Mindestens 2 Zeichen eingeben",
+      "noObjectMatches": "Keine Treffer",
+      "save": "Speichern",
+      "saving": "Speichern…",
+      "cancel": "Abbrechen",
+      "deleteNote": "Notiz löschen",
+      "deleteConfirm": "Diese Notiz löschen?",
+      "deleteConfirmBtn": "Bestätigen"
+    },
+    "viewer": {
+      "edit": "Bearbeiten",
+      "digDeeper": "Tiefer forschen",
+      "shared": "Geteilt",
+      "noContent": "Noch kein Inhalt. Klicken Sie auf Bearbeiten, um Notizen hinzuzufügen.",
+      "linkedObjects": "verknüpfte {count, plural, =1 {Objekt} other {Objekte}}"
+    },
+    "thread": {
+      "noReplies": "Noch keine Antworten",
+      "replies": "{count} {count, plural, =1 {Antwort} other {Antworten}}",
+      "replyPlaceholder": "Antwort hinzufügen (Markdown unterstützt)…",
+      "reply": "Antworten",
+      "replying": "…",
+      "loadingReplies": "Antworten laden…"
+    },
+    "markdown": {
+      "preview": "Vorschau",
+      "edit": "Bearbeiten",
+      "placeholder": "In Markdown schreiben…",
+      "nothingToPreview": "Nichts zur Vorschau."
+    },
+    "ai": {
+      "title": "KI-Assistent",
+      "history": "Verlauf",
+      "historyEmpty": "Keine gespeicherten Sitzungen",
+      "clearChat": "Leeren",
+      "saveConversation": "Gespräch speichern",
+      "collectionContextToggle": "Sammlungskontext hinzufügen",
+      "collectionContextEnabled": "Sammlung ({count} Objekte)",
+      "notConfigured": {
+        "title": "KI-Assistent nicht konfiguriert",
+        "hint": "Fügen Sie Ihren API-Schlüssel in den Einstellungen hinzu, um den KI-Forschungsassistenten zu aktivieren.",
+        "goToSettings": "Zu den Einstellungen →"
+      },
+      "checkingConfig": "KI-Konfiguration wird geprüft…",
+      "emptyHint": "Fragen Sie zu Provenienz, Zuschreibung, Katalogisierungsstandards oder Kulturgüterrecht.",
+      "researchingObject": "Recherchiere: {objectTitle}",
+      "objectContextHint": "Objektdetails sind als Kontext geladen. Fragen Sie zu Provenienz, Zuschreibung, Materialien oder Katalogdokumentation.",
+      "placeholder": "Fragen zu Provenienz, Zuschreibung, Katalogisierung…",
+      "placeholderWithObject": "Fragen zu {objectTitle}…",
+      "send": "Senden",
+      "saveAsNote": "Als Notiz speichern",
+      "savedNoteTitle": "KI-Recherche — {date}",
+      "savedNoteDescription": "Aus dem KI-Assistenten gespeichert",
+      "savedConversationTitle": "KI-Gespräch — {date}",
+      "savedConversationDescription": "Forschungsgespräch ({count} Nachrichten)",
+      "promptTemplates": "Prompt-Vorlagen",
+      "promptTemplatesHide": "Vorlagen ausblenden",
+      "aiSettings": "KI-Einstellungen",
+      "you": "Sie",
+      "ai": "KI",
+      "suggestions": [
+        "Welche Provenienznachweise sollte ich suchen?",
+        "Wie überprüfe ich das Art Loss Register?",
+        "Erklären Sie die Spectrum-Katalogisierungsstandards"
+      ]
+    },
+    "wikipedia": {
+      "searchPlaceholder": "Wikipedia durchsuchen…",
+      "searching": "Suche läuft…",
+      "title": "Wikipedia",
+      "prompt": "Wikipedia durchsuchen, um Hintergrundinformationen zu Künstlern, Herstellern, historischen Epochen, Orten oder Materialien zu finden.",
+      "noResults": "Keine Ergebnisse für \"{query}\"",
+      "selectResult": "Ergebnis auswählen, um den Artikel zu lesen",
+      "loading": "Artikel wird geladen…",
+      "openInWikipedia": "In Wikipedia öffnen ↗",
+      "saveAsNote": "Als Notiz speichern"
+    },
+    "getty": {
+      "searchPlaceholder": "AAT-Begriffe suchen — z. B. Silber, Ölfarbe, Porträt…",
+      "searching": "Suche läuft…",
+      "title": "Getty Art & Architecture Thesaurus",
+      "prompt": "Kontrolliertes Vokabular suchen — Objekttypen, Materialien, Techniken, Stile und Epochen in der Kunst- und Architekturkatalogisierung.",
+      "noResults": "Keine AAT-Begriffe für \"{query}\" gefunden",
+      "selectTerm": "Begriff auswählen, um die Definition zu sehen",
+      "hierarchy": "Hierarchie",
+      "definition": "Definition",
+      "viewInGetty": "Im Getty anzeigen ↗",
+      "saveAsNote": "Als Notiz speichern",
+      "description": "Kontrolliertes Vokabular für Kunst- und Architekturterminologie"
+    },
+    "europeana": {
+      "searchPlaceholder": "Europeana durchsuchen — z. B. Keltischer Schmuck, Römische Keramik…",
+      "searching": "Suche läuft…",
+      "title": "Europäisches Kulturerbe — Europeana",
+      "prompt": "Mehr als 50 Millionen digitalisierte Objekte, Kunstwerke, Bücher und Aufzeichnungen aus europäischen Museen und Archiven durchsuchen.",
+      "noResults": "Keine Ergebnisse für \"{query}\"",
+      "selectRecord": "Eintrag auswählen, um Details zu sehen",
+      "allTypes": "Alle Typen",
+      "noApiKey": {
+        "title": "Europeana-API-Schlüssel nicht konfiguriert",
+        "hint": "Fügen Sie EUROPEANA_API_KEY in Ihre .env.local-Datei ein. Einen kostenlosen Schlüssel erhalten Sie unter apis.europeana.eu."
+      },
+      "institution": "Institution",
+      "date": "Datum",
+      "country": "Land",
+      "type": "Typ",
+      "openInEuropeana": "In Europeana öffnen ↗",
+      "saveAsNote": "Als Notiz speichern",
+      "description": "Über 50 Millionen digitalisierte Einträge aus europäischen Museen und Archiven"
+    },
+    "wikidata": {
+      "searchPlaceholder": "Wikidata durchsuchen — Künstler, Hersteller, Orte, Epochen…",
+      "searching": "Suche läuft…",
+      "title": "Wikidata-Entitätssuche",
+      "prompt": "Künstler, Hersteller, Dynastien, Orte und historische Epochen nachschlagen. Ruft strukturierte Normdaten ab, einschließlich VIAF, ULAN und RKD-Kennungen.",
+      "noResults": "Keine Ergebnisse für \"{query}\"",
+      "selectEntity": "Entität auswählen, um Details zu sehen",
+      "loadingEntity": "Entitätsdaten werden geladen…",
+      "born": "Geboren",
+      "died": "Gestorben",
+      "authorityIds": "Normdaten-Kennungen",
+      "openInWikidata": "In Wikidata öffnen ↗",
+      "saveAsNote": "Als Notiz speichern",
+      "description": "Strukturierte Daten — Künstler, Hersteller, Orte, Normdaten"
+    },
+    "explore": {
+      "getty": "Getty AAT",
+      "europeana": "Europeana",
+      "wikidata": "Wikidata"
+    },
+    "settings": {
+      "title": "KI-Assistent",
+      "description": "Konfigurieren Sie Ihren KI-Anbieter für den Forschungsassistenten. Schlüssel werden verschlüsselt gespeichert.",
+      "provider": "Anbieter",
+      "model": "Modell",
+      "modelCustomPlaceholder": "z. B. llama3.2, mistral",
+      "apiKey": "API-Schlüssel",
+      "apiKeyExisting": "(leer lassen, um bestehenden Schlüssel zu behalten)",
+      "apiKeyPlaceholder": "sk-ant-…",
+      "baseUrl": "Ollama-Basis-URL",
+      "baseUrlPlaceholder": "http://localhost:11434/v1",
+      "saveSettings": "Einstellungen speichern",
+      "updateSettings": "Einstellungen aktualisieren",
+      "saving": "Speichern…",
+      "removeKey": "Schlüssel entfernen",
+      "removing": "Wird entfernt…",
+      "keySaved": "API-Schlüssel gespeichert ·"
+    },
+    "objectTab": {
+      "title": "Recherchenotizen",
+      "newNote": "Neue Notiz",
+      "researchWithAI": "Mit KI recherchieren",
+      "loading": "Laden…",
+      "empty": {
+        "message": "Noch keine Recherchenotizen mit diesem Objekt verknüpft.",
+        "cta": "Erste Notiz erstellen →"
+      },
+      "shortcuts": {
+        "wikipedia": "Wikipedia durchsuchen",
+        "getty": "Getty AAT",
+        "wikidata": "Wikidata"
+      }
+    },
+    "objectList": {
+      "research": "Recherche"
+    }
+  }
+}
