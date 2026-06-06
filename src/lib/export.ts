@@ -77,20 +77,149 @@ export function exportCsv(objects: CollectionObject[], filename?: string) {
 }
 
 // ── LIDO XML export (LIDO 1.0, Spectrum-aligned) ──────────────────────────────
+//
+// Field mapping — the LIDO importer must invert this exactly:
+//   title             → titleWrap/titleSet/appellationValue[pref=preferred]
+//   object_name       → objectWorkTypeWrap/objectWorkType/term  (Spectrum "object name" = type-of-thing)
+//   object_type       → classificationWrap/classification/term  (broader category; only when ≠ object_name)
+//   maker             → Production event / eventActor / appellationValue
+//   date_from/to      → Production event / eventDate / date / earliestDate + latestDate
+//   date_precision    → affects displayDate qualifier and omission of earliest/latest bounds
+//   materials[]       → Production event / eventMaterialsTech: displayMaterialsTech + termMaterialsTech per item
+//   brief_description → objectDescriptionWrap / descriptiveNoteValue
+//   dimensions        → objectMeasurementsWrap / objectMeasurementsSet (display + structured)
+//   current_condition → Condition Assessment event / eventDescriptionSet / descriptiveNoteValue
+//   accession_number  → repositoryWrap/workID[type=accession number] + recordWrap/recordID
+//   rights_holder     → rightsWorkWrap / rightsHolder / legalBodyName
+//   copyright_status  → recordWrap / recordRights / rightsType / term
+//
+// lido:category (CIDOC-CRM class) is intentionally omitted — Cartlann is domain-agnostic
+// (archives, manuscripts, natural history, art) so no single CRM class applies uniformly.
+
+function buildLidoDate(obj: CollectionObject): string {
+  const display = dateLabel(obj);
+  if (!display && obj.date_from == null) return "";
+  const prec = obj.date_precision;
+  let earliest = "";
+  let latest = "";
+  if (obj.date_from != null) {
+    if (prec !== "before") earliest = String(obj.date_from);
+    if (prec !== "after") latest = String(obj.date_to ?? obj.date_from);
+  }
+  const structuredPart =
+    earliest || latest
+      ? [
+          "              <lido:date>",
+          earliest ? `                <lido:earliestDate>${earliest}</lido:earliestDate>` : "",
+          latest ? `                <lido:latestDate>${latest}</lido:latestDate>` : "",
+          "              </lido:date>",
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : "";
+  return [
+    "<lido:eventDate>",
+    display ? `              <lido:displayDate>${escapeXml(display)}</lido:displayDate>` : "",
+    structuredPart,
+    "            </lido:eventDate>",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function buildLidoDimensions(dims: Record<string, unknown>): string {
+  let display = "";
+  let structuredSets = "";
+
+  if (typeof dims.raw === "string") {
+    display = escapeXml(dims.raw);
+  } else {
+    const parts: string[] = [];
+    const sets: string[] = [];
+    for (const [key, val] of Object.entries(dims)) {
+      if (typeof val === "object" && val !== null) {
+        const d = val as { value?: unknown; unit?: unknown };
+        if (typeof d.value === "number") {
+          parts.push(`${key}: ${d.value}${typeof d.unit === "string" ? " " + d.unit : ""}`);
+          sets.push(
+            [
+              "              <lido:measurementsSet>",
+              `                <lido:measurementType>${escapeXml(key)}</lido:measurementType>`,
+              typeof d.unit === "string"
+                ? `                <lido:measurementUnit>${escapeXml(d.unit)}</lido:measurementUnit>`
+                : "",
+              `                <lido:measurementValue>${d.value}</lido:measurementValue>`,
+              "              </lido:measurementsSet>",
+            ]
+              .filter(Boolean)
+              .join("\n")
+          );
+        }
+      }
+    }
+    if (parts.length > 0) {
+      display = escapeXml(parts.join(", "));
+      structuredSets = sets.join("\n");
+    }
+  }
+
+  if (!display) return "";
+  return [
+    "<lido:objectMeasurementsWrap>",
+    "          <lido:objectMeasurementsSet>",
+    `            <lido:displayObjectMeasurements>${display}</lido:displayObjectMeasurements>`,
+    structuredSets
+      ? `            <lido:objectMeasurements>\n${structuredSets}\n            </lido:objectMeasurements>`
+      : "",
+    "          </lido:objectMeasurementsSet>",
+    "        </lido:objectMeasurementsWrap>",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
 
 function lidoRecord(obj: CollectionObject, institutionName: string): string {
-  const id = escapeXml(obj.id);
-  const title = escapeXml(obj.title);
-  const objectName = obj.object_name ? escapeXml(obj.object_name) : "";
-  const objectType = obj.object_type ? escapeXml(obj.object_type) : "";
-  const maker = obj.maker ? escapeXml(obj.maker) : "";
-  const date = escapeXml(dateLabel(obj));
-  const materials = escapeXml(obj.materials.join("; "));
-  const description = obj.brief_description ? escapeXml(obj.brief_description) : "";
-  const accession = obj.accession_number ? escapeXml(obj.accession_number) : "";
-  const rightsHolder = obj.rights_holder ? escapeXml(obj.rights_holder) : "";
-  const institution = escapeXml(institutionName);
-  const condition = obj.current_condition ? escapeXml(obj.current_condition) : "";
+  const x = escapeXml;
+  const id = x(obj.id);
+  const institution = x(institutionName);
+  const accession = obj.accession_number ? x(obj.accession_number) : "";
+  const description = obj.brief_description ? x(obj.brief_description) : "";
+  const rightsHolder = obj.rights_holder ? x(obj.rights_holder) : "";
+  const copyrightStatus = x(obj.copyright_status ?? "Unknown");
+  const maker = obj.maker ? x(obj.maker) : "";
+  const condition = obj.current_condition ? x(obj.current_condition) : "";
+
+  // objectWorkType = Spectrum "object name" (specific type, e.g. "vase")
+  // classificationWrap = broader category (e.g. "ceramics") only when distinct
+  const workTypeTerm = obj.object_name
+    ? x(obj.object_name)
+    : obj.object_type
+    ? x(obj.object_type)
+    : "Object";
+  const classificationTerm =
+    obj.object_type && obj.object_name && obj.object_type !== obj.object_name
+      ? x(obj.object_type)
+      : "";
+
+  const dateXml = buildLidoDate(obj);
+  const hasMaterials = obj.materials.length > 0;
+  const materialsXml = hasMaterials
+    ? [
+        "<lido:eventMaterialsTech>",
+        `              <lido:displayMaterialsTech>${x(obj.materials.join("; "))}</lido:displayMaterialsTech>`,
+        "              <lido:materialsTech>",
+        ...obj.materials.map(
+          m =>
+            `                <lido:termMaterialsTech>\n                  <lido:term>${x(m)}</lido:term>\n                </lido:termMaterialsTech>`
+        ),
+        "              </lido:materialsTech>",
+        "            </lido:eventMaterialsTech>",
+      ].join("\n")
+    : "";
+
+  const hasProductionEvent = !!(maker || dateXml || hasMaterials);
+  const hasEventWrap = hasProductionEvent || !!condition;
+  const dimensionsXml = obj.dimensions ? buildLidoDimensions(obj.dimensions) : "";
 
   return `  <lido:lido>
     <lido:lidoRecID lido:type="local">${id}</lido:lidoRecID>
@@ -98,19 +227,19 @@ function lidoRecord(obj: CollectionObject, institutionName: string): string {
       <lido:objectClassificationWrap>
         <lido:objectWorkTypeWrap>
           <lido:objectWorkType>
-            <lido:term>${objectName || objectType || "Object"}</lido:term>
+            <lido:term>${workTypeTerm}</lido:term>
           </lido:objectWorkType>
         </lido:objectWorkTypeWrap>
-        ${objectType ? `<lido:classificationWrap>
+        ${classificationTerm ? `<lido:classificationWrap>
           <lido:classification>
-            <lido:term>${objectType}</lido:term>
+            <lido:term>${classificationTerm}</lido:term>
           </lido:classification>
         </lido:classificationWrap>` : ""}
       </lido:objectClassificationWrap>
       <lido:objectIdentificationWrap>
         <lido:titleWrap>
           <lido:titleSet>
-            <lido:appellationValue xml:lang="en">${title}</lido:appellationValue>
+            <lido:appellationValue xml:lang="en" lido:pref="preferred">${x(obj.title)}</lido:appellationValue>
           </lido:titleSet>
         </lido:titleWrap>
         <lido:repositoryWrap>
@@ -129,14 +258,10 @@ function lidoRecord(obj: CollectionObject, institutionName: string): string {
             <lido:descriptiveNoteValue>${description}</lido:descriptiveNoteValue>
           </lido:objectDescriptionSet>
         </lido:objectDescriptionWrap>` : ""}
-        ${condition ? `<lido:objectMeasurementsWrap>
-          <lido:objectMeasurementsSet>
-            <lido:displayObjectMeasurements>Condition: ${condition}</lido:displayObjectMeasurements>
-          </lido:objectMeasurementsSet>
-        </lido:objectMeasurementsWrap>` : ""}
+        ${dimensionsXml}
       </lido:objectIdentificationWrap>
-      ${(maker || date || materials) ? `<lido:eventWrap>
-        <lido:eventSet>
+      ${hasEventWrap ? `<lido:eventWrap>
+        ${hasProductionEvent ? `<lido:eventSet>
           <lido:event>
             <lido:eventType>
               <lido:term lido:pref="preferred">Production</lido:term>
@@ -153,14 +278,20 @@ function lidoRecord(obj: CollectionObject, institutionName: string): string {
                 </lido:roleActor>
               </lido:actorInRole>
             </lido:eventActor>` : ""}
-            ${date ? `<lido:eventDate>
-              <lido:displayDate>${date}</lido:displayDate>
-            </lido:eventDate>` : ""}
-            ${materials ? `<lido:eventMaterialsTech>
-              <lido:displayMaterialsTech>${materials}</lido:displayMaterialsTech>
-            </lido:eventMaterialsTech>` : ""}
+            ${dateXml}
+            ${materialsXml}
           </lido:event>
-        </lido:eventSet>
+        </lido:eventSet>` : ""}
+        ${condition ? `<lido:eventSet>
+          <lido:event>
+            <lido:eventType>
+              <lido:term lido:pref="preferred">Condition Assessment</lido:term>
+            </lido:eventType>
+            <lido:eventDescriptionSet>
+              <lido:descriptiveNoteValue>${condition}</lido:descriptiveNoteValue>
+            </lido:eventDescriptionSet>
+          </lido:event>
+        </lido:eventSet>` : ""}
       </lido:eventWrap>` : ""}
     </lido:descriptiveMetadata>
     <lido:administrativeMetadata xml:lang="en">
@@ -186,7 +317,7 @@ function lidoRecord(obj: CollectionObject, institutionName: string): string {
         </lido:recordSource>
         <lido:recordRights>
           <lido:rightsType>
-            <lido:term>${obj.copyright_status ? escapeXml(obj.copyright_status) : "Unknown"}</lido:term>
+            <lido:term>${copyrightStatus}</lido:term>
           </lido:rightsType>
         </lido:recordRights>
         <lido:recordInfoSet>
