@@ -12,6 +12,7 @@ import type { LabelObject } from "@/lib/label-generator";
 
 const LabelPrintModal = dynamic(() => import("@/components/LabelPrintModal"), { ssr: false });
 const ImportModal = dynamic(() => import("@/components/ImportModal"), { ssr: false });
+const LidoImportModal = dynamic(() => import("@/components/LidoImportModal"), { ssr: false });
 
 function statusBadge(status: string) {
   const colours: Record<string, string> = {
@@ -49,6 +50,8 @@ export default function ObjectsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showLidoImportModal, setShowLidoImportModal] = useState(false);
+  const [showImportMenu, setShowImportMenu] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
   useEffect(() => {
@@ -61,6 +64,13 @@ export default function ObjectsPage() {
     document.addEventListener("click", close);
     return () => document.removeEventListener("click", close);
   }, [showExportMenu]);
+
+  useEffect(() => {
+    if (!showImportMenu) return;
+    const close = () => setShowImportMenu(false);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [showImportMenu]);
 
   const fetchObjects = useCallback(async () => {
     if (!token) return;
@@ -141,16 +151,32 @@ export default function ObjectsPage() {
               </div>
             )}
           </div>
-          {/* Import */}
-          <button
-            onClick={() => setShowImportModal(true)}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-800 border border-slate-200 hover:border-slate-300 px-3 py-2 rounded-lg transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-            </svg>
-            Import
-          </button>
+          {/* Import dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowImportMenu(v => !v)}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-800 border border-slate-200 hover:border-slate-300 px-3 py-2 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+              Import
+              <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            {showImportMenu && (
+              <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl border border-slate-200 shadow-lg py-1 z-20">
+                {[
+                  { label: "CSV", action: () => { setShowImportModal(true); setShowImportMenu(false); } },
+                  { label: "LIDO XML", action: () => { setShowLidoImportModal(true); setShowImportMenu(false); } },
+                ].map(({ label, action }) => (
+                  <button key={label} type="button" onClick={action}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           {canWrite && (
             <Link
               href="/objects/new"
@@ -320,6 +346,14 @@ export default function ObjectsPage() {
           token={token}
           onClose={() => setShowImportModal(false)}
           onComplete={() => { setShowImportModal(false); fetchObjects(); }}
+        />
+      )}
+
+      {showLidoImportModal && token && (
+        <LidoImportModal
+          token={token}
+          onClose={() => setShowLidoImportModal(false)}
+          onComplete={() => { setShowLidoImportModal(false); fetchObjects(); }}
         />
       )}
 

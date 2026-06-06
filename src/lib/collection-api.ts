@@ -633,3 +633,70 @@ export const upsertAiSettings = (
 
 export const deleteAiSettings = (token: string): Promise<void> =>
   apiRequest("/ai-settings", token, { method: "DELETE" });
+
+// ── LIDO import types + API ───────────────────────────────────────────────────
+
+export interface LidoPreviewRecord {
+  index: number;
+  lido_record_id: string | null;
+  title: string;
+  object_name: string | null;
+  object_type: string | null;
+  maker: string | null;
+  date_from: number | null;
+  date_to: number | null;
+  date_precision: string | null;
+  materials: string[];
+  brief_description: string | null;
+  current_condition: string | null;
+  accession_number: string | null;
+  dimensions: Record<string, unknown> | null;
+  rights_holder: string | null;
+  copyright_status: string | null;
+  warnings: string[];
+}
+
+export interface LidoImportError {
+  index: number;
+  lido_record_id: string | null;
+  title: string | null;
+  message: string;
+}
+
+export interface LidoImportResult {
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: LidoImportError[];
+}
+
+async function lidoMultipartRequest<T>(
+  path: string,
+  token: string,
+  form: FormData,
+): Promise<T> {
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+  if (_activeCollectionId) headers["X-Collection-Id"] = _activeCollectionId;
+  const res = await fetch(`${BASE}${path}`, { method: "POST", headers, body: form });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+  return data as T;
+}
+
+export function previewLidoImport(token: string, file: File): Promise<LidoPreviewRecord[]> {
+  const form = new FormData();
+  form.append("file", file);
+  return lidoMultipartRequest("/import/lido/preview", token, form);
+}
+
+export function importLido(
+  token: string,
+  file: File,
+  options: { on_duplicate: "skip" | "update"; status: string },
+): Promise<LidoImportResult> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("on_duplicate", options.on_duplicate);
+  form.append("status", options.status);
+  return lidoMultipartRequest("/import/lido", token, form);
+}
