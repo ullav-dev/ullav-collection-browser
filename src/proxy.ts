@@ -21,6 +21,7 @@ function route(request: NextRequest): NextResponse {
     "/api/ai/",
     "/api/europeana/",
     "/api/getty/",
+    "/api/iiif/",   // IIIF image proxy — injects DAM auth via cookie
     "/api/wikidata/",
     "/api/wikipedia/",
   ];

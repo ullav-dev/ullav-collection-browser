@@ -21,6 +21,10 @@ import Modal from "@/components/Modal";
 import FormField, { inputCls, selectCls, ErrorBox, SaveButton } from "@/components/FormField";
 
 const LabelPrintModal = dynamic(() => import("@/components/LabelPrintModal"), { ssr: false });
+const IiifViewerModal = dynamic(
+  () => import("@/components/IiifViewerModal").then((m) => ({ default: m.IiifViewerModal })),
+  { ssr: false },
+);
 
 type Tab = "details" | "condition" | "conservation" | "loans" | "movements" | "parts" | "research";
 
@@ -62,6 +66,8 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
 
   const [object, setObject] = useState<CollectionObject | null>(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerManifestUrl, setViewerManifestUrl] = useState<string | null>(null);
   const [movements, setMovements] = useState<ObjectMovement[]>([]);
   const [parts, setParts] = useState<ObjectPart[]>([]);
   const [conditionChecks, setConditionChecks] = useState<ConditionCheck[]>([]);
@@ -181,6 +187,42 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
     { key: "research", label: "Research", count: notesLoaded ? objectNotes.length : undefined },
   ];
 
+  async function handleOpenViewer(assetId: string) {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/dam/iiif/manifest/${assetId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const manifest = await res.json() as Record<string, unknown>;
+
+      // Rewrite server URLs through the local IIIF image proxy so tiles carry auth.
+      const manifestId = typeof manifest.id === "string" ? manifest.id : "";
+      const serverBase = manifestId.replace(/\/iiif\/manifest\/[^/]+$/, "");
+      const origin = window.location.origin;
+      let manifestStr = JSON.stringify(manifest);
+      if (serverBase) {
+        manifestStr = manifestStr.split(serverBase).join(`${origin}/api`);
+      }
+
+      const secure = window.location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = `iiif_access_token=${token}; path=/api/iiif/image; SameSite=Strict; Max-Age=3600${secure}`;
+
+      const blob = new Blob([manifestStr], { type: "application/ld+json" });
+      setViewerManifestUrl(URL.createObjectURL(blob));
+      setViewerOpen(true);
+    } catch {
+      // ignore — viewer simply won't open
+    }
+  }
+
+  function handleCloseViewer() {
+    if (viewerManifestUrl?.startsWith("blob:")) URL.revokeObjectURL(viewerManifestUrl);
+    setViewerManifestUrl(null);
+    setViewerOpen(false);
+    document.cookie = "iiif_access_token=; path=/api/iiif/image; Max-Age=0; SameSite=Strict";
+  }
+
   const dateLabel = object.date_from != null
     ? (object.date_to && object.date_to !== object.date_from
         ? `${object.date_from}–${object.date_to}`
@@ -260,6 +302,17 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
             className="rounded-xl border border-slate-200 bg-slate-50 object-contain max-h-64 max-w-xs shadow-sm"
           />
           <div className="flex flex-col gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => handleOpenViewer(object.primary_image_asset_id!)}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-700 hover:text-teal-800 border border-teal-200 hover:border-teal-300 hover:bg-teal-50 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+              </svg>
+              Open IIIF Viewer
+            </button>
             <button
               type="button"
               onClick={() => {
@@ -590,6 +643,14 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
         )}
       </div>
     </div>
+
+    {viewerOpen && viewerManifestUrl && object && (
+      <IiifViewerModal
+        manifestUrl={viewerManifestUrl}
+        objectTitle={object.title}
+        onClose={handleCloseViewer}
+      />
+    )}
 
     {showPrintModal && object && (
       <LabelPrintModal
