@@ -13,7 +13,7 @@ const gitSha: string = (() => {
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  transpilePackages: ["@ullav-dev/dam-picker"],
+  transpilePackages: ["@ullav-dev/dam-picker", "mirador", "mirador-annotation-editor"],
   env: {
     NEXT_PUBLIC_APP_VERSION: appVersion,
     NEXT_PUBLIC_GIT_SHA: gitSha,
