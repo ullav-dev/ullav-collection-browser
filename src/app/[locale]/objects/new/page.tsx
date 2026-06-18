@@ -241,7 +241,10 @@ export default function NewObjectPage() {
         <DamPickerModal
           token={token}
           username={user.username}
-          onSelect={setPickedAsset}
+          onSelect={(asset) => {
+            setPickedAsset(asset);
+            if (!title) setTitle(asset.name);
+          }}
           onClose={() => setPickerOpen(false)}
         />
       )}

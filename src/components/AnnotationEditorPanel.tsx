@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import MarkdownEditor from "./MarkdownEditor";
-import { DamPicker } from "@ullav-dev/dam-picker";
 import type { PickedAsset } from "@ullav-dev/dam-picker";
+import dynamic from "next/dynamic";
+const DamPickerModal = dynamic(() => import("./DamPickerModal"), { ssr: false });
 
 export interface PendingAnnotation {
   id?: string;
@@ -203,21 +204,14 @@ export default function AnnotationEditorPanel({ token, username, damApiBase, col
         </div>
       )}
 
-      {/* DAM Picker overlay */}
+      {/* DAM Picker modal */}
       {pickerOpen && (
-        <div className="absolute inset-0 z-50 bg-slate-900/95 flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
-            <span className="text-xs font-semibold text-teal-400 uppercase tracking-wide">Select Comad asset</span>
-            <button type="button" onClick={() => setPickerOpen(false)} className="text-slate-400 hover:text-white transition-colors">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <DamPicker apiBase={damApiBase} token={token} username={username} onSelect={handleAssetPick} />
-          </div>
-        </div>
+        <DamPickerModal
+          token={token}
+          username={username}
+          onSelect={handleAssetPick}
+          onClose={() => setPickerOpen(false)}
+        />
       )}
     </div>
   );

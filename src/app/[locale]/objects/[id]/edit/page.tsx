@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Modal from "@/components/Modal";
-import DamPickerPanel from "@/components/DamPickerPanel";
+import dynamic from "next/dynamic";
+const DamPickerModal = dynamic(() => import("@/components/DamPickerModal"), { ssr: false });
 import {
   getObject,
   updateObject,
@@ -48,6 +49,7 @@ export default function EditObjectPage({ params }: { params: Promise<{ id: strin
   const [accessionSuccess, setAccessionSuccess] = useState<string | null>(null);
   const [primaryAssetId, setPrimaryAssetId] = useState<string | null>(null);
   const [assetSaving, setAssetSaving] = useState(false);
+  const [assetPickerOpen, setAssetPickerOpen] = useState(false);
 
   // Form state — initialised from object once loaded
   const [title, setTitle] = useState("");
@@ -290,23 +292,28 @@ export default function EditObjectPage({ params }: { params: Promise<{ id: strin
                 {assetSaving ? "Removing…" : "Remove image"}
               </button>
               <div className="mt-1">
-                <DamPickerPanel
-                  token={token!}
-                  username={user.username}
-                  onSelect={handleAssetSelect}
-                  label="Change image…"
-                />
+                <button
+                  type="button"
+                  onClick={() => setAssetPickerOpen(true)}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 5.5 2-3.5 3 6z" clipRule="evenodd" /></svg>
+                  Change image…
+                </button>
               </div>
             </div>
           </div>
         ) : (
           <div>
             <p className="text-sm text-slate-500 mb-3">No primary image set.</p>
-            <DamPickerPanel
-              token={token!}
-              username={user.username}
-              onSelect={handleAssetSelect}
-            />
+            <button
+              type="button"
+              onClick={() => setAssetPickerOpen(true)}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 5.5 2-3.5 3 6z" clipRule="evenodd" /></svg>
+              Browse media library…
+            </button>
           </div>
         )}
       </div>
@@ -432,6 +439,15 @@ export default function EditObjectPage({ params }: { params: Promise<{ id: strin
             </button>
           </div>
         </Modal>
+      )}
+
+      {assetPickerOpen && token && (
+        <DamPickerModal
+          token={token}
+          username={user.username}
+          onSelect={handleAssetSelect}
+          onClose={() => setAssetPickerOpen(false)}
+        />
       )}
     </div>
   );
