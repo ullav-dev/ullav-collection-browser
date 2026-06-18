@@ -8,6 +8,7 @@ import { useCollection } from "@/contexts/CollectionContext";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 import UserAvatar, { userDisplayName } from "@/components/UserAvatar";
 import AboutModal from "@/components/AboutModal";
+import TeamSwitcher from "@/components/TeamSwitcher";
 
 // Named window target — browser reuses the same tab if it's already open.
 const COMAD_WINDOW_NAME = "cartlann_comad";
@@ -81,12 +82,15 @@ export default function Nav() {
     <header className="bg-white border-b border-slate-200 shadow-sm shrink-0">
       <div className="max-w-full px-4 sm:px-6">
         <div className="flex items-center justify-between h-14">
-          {/* Logo + collection switcher */}
+          {/* Logo + team/collection switchers */}
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2.5">
               <CartlannIcon />
               <span className="font-bold text-lg text-slate-800 tracking-tight">Cartlann</span>
             </Link>
+
+            {/* Team switcher — only visible when collections span multiple teams */}
+            {user && <TeamSwitcher />}
 
             {/* Collection switcher — only shown when logged in with >0 collections */}
             {user && collections.length > 0 && (

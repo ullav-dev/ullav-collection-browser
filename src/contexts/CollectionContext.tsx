@@ -29,6 +29,8 @@ export interface TeamInfo {
 interface CollectionContextValue {
   collections: Collection[];
   activeCollection: Collection | null;
+  /** The team that owns the active collection (derived from activeCollection.team_id). */
+  activeTeam: TeamInfo | null;
   /** Team-level Cartlann product role from JWT (null for legacy nil-team collection). */
   userRole: CartlannRole | null;
   /** Per-collection role from collection_members table (overrides team role for access decisions). */
@@ -97,6 +99,7 @@ const NIL_TEAM_ID = "00000000-0000-0000-0000-000000000000";
 const CollectionContext = createContext<CollectionContextValue>({
   collections: [],
   activeCollection: null,
+  activeTeam: null,
   userRole: null,
   collectionRole: null,
   canManageCollection: false,
@@ -215,11 +218,15 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
     ? Object.entries(teamsFromToken(token)).map(([id, t]) => ({ id, name: t.name }))
     : [];
 
+  const activeTeam: TeamInfo | null =
+    activeCollection ? (teams.find((t) => t.id === activeCollection.team_id) ?? null) : null;
+
   return (
     <CollectionContext.Provider
       value={{
         collections,
         activeCollection,
+        activeTeam,
         userRole,
         collectionRole,
         canManageCollection,
