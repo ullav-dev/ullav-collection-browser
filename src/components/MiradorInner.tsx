@@ -28,6 +28,7 @@ const MIRADOR_SUPPRESSED_WARNINGS = [
   "is using incorrect casing",
   "is unrecognized in this browser",
   "synchronously unmount a root while React was already rendering",
+  "React does not recognize the `tReady` prop",
 ];
 
 function suppressMiradorWarnings() {
