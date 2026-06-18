@@ -20,6 +20,7 @@ import dynamic from "next/dynamic";
 import { ANNOTATION_SAVED_EVENT } from "@/components/AnnotationEditorPanel";
 import Modal from "@/components/Modal";
 import FormField, { inputCls, selectCls, ErrorBox, SaveButton } from "@/components/FormField";
+import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currencies";
 
 const LabelPrintModal = dynamic(() => import("@/components/LabelPrintModal"), { ssr: false });
 const IiifViewerModal = dynamic(
@@ -103,9 +104,9 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
   const today = new Date().toISOString().slice(0, 10);
   const [condForm, setCondForm] = useState({ check_date: today, condition_grade: "good", notes: "", next_check_date: "" });
   // Treatment form
-  const [treatForm, setTreatForm] = useState({ treatment_type: "", start_date: today, end_date: "", conservator_id: "", description: "", cost: "", currency: "GBP", outcome: "" });
+  const [treatForm, setTreatForm] = useState({ treatment_type: "", start_date: today, end_date: "", conservator_id: "", description: "", cost: "", currency: DEFAULT_CURRENCY, outcome: "" });
   // Loan form
-  const [loanForm, setLoanForm] = useState({ loan_type: "loan_out", counterpart_id: "", purpose: "", start_date: today, expected_end_date: "", venue: "", insurance_value: "", insurance_currency: "GBP", conditions_text: "", notes: "" });
+  const [loanForm, setLoanForm] = useState({ loan_type: "loan_out", counterpart_id: "", purpose: "", start_date: today, expected_end_date: "", venue: "", insurance_value: "", insurance_currency: DEFAULT_CURRENCY, conditions_text: "", notes: "" });
   // Move form
   const [moveForm, setMoveForm] = useState({ to_location_id: "", reason: "", notes: "" });
 
@@ -565,7 +566,9 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
                     <input id="tr-cost" type="number" step="0.01" value={treatForm.cost} onChange={e => setTreatForm(f => ({...f, cost: e.target.value}))} className={inputCls} />
                   </FormField>
                   <FormField label="Currency" htmlFor="tr-curr">
-                    <input id="tr-curr" value={treatForm.currency} onChange={e => setTreatForm(f => ({...f, currency: e.target.value}))} className={inputCls} />
+                    <select id="tr-curr" value={treatForm.currency} onChange={e => setTreatForm(f => ({...f, currency: e.target.value}))} className={selectCls}>
+                      {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
                   </FormField>
                   <FormField label="Outcome" htmlFor="tr-out">
                     <input id="tr-out" value={treatForm.outcome} onChange={e => setTreatForm(f => ({...f, outcome: e.target.value}))} className={inputCls} />
@@ -639,6 +642,16 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
                   </FormField>
                   <FormField label="Venue" htmlFor="ln-venue">
                     <input id="ln-venue" value={loanForm.venue} onChange={e => setLoanForm(f => ({...f, venue: e.target.value}))} className={inputCls} />
+                  </FormField>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <FormField label="Insurance value" htmlFor="ln-ins-val">
+                    <input id="ln-ins-val" type="number" step="0.01" value={loanForm.insurance_value} onChange={e => setLoanForm(f => ({...f, insurance_value: e.target.value}))} className={inputCls} />
+                  </FormField>
+                  <FormField label="Currency" htmlFor="ln-ins-curr">
+                    <select id="ln-ins-curr" value={loanForm.insurance_currency} onChange={e => setLoanForm(f => ({...f, insurance_currency: e.target.value}))} className={selectCls}>
+                      {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
                   </FormField>
                 </div>
                 <SaveButton saving={formSaving} label="Record loan" />
