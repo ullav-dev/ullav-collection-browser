@@ -38,7 +38,7 @@ function toLabelObject(obj: CollectionObject): LabelObject {
 
 export default function ObjectsPage() {
   const { user, token, isLoading } = useAuth();
-  const { userRole, canWrite } = useCollection();
+  const { userRole, canWrite, activeCollection } = useCollection();
   const router = useRouter();
   const locale = useLocale();
 
@@ -85,7 +85,7 @@ export default function ObjectsPage() {
     } finally {
       setLoading(false);
     }
-  }, [token, search]);
+  }, [token, search, activeCollection?.id]);
 
   useEffect(() => {
     if (token) fetchObjects();
