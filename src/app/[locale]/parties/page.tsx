@@ -26,8 +26,7 @@ function fromParty(p: Party): FormState {
 
 export default function PartiesPage() {
   const { user, token, isLoading } = useAuth(); 
-  const { userRole } = useCollection();
-  const canWrite = userRole !== "viewer";
+  const { userRole, canWrite } = useCollection();
   const router = useRouter();
   const [parties, setParties] = useState<Party[]>([]);
   const [search, setSearch] = useState("");

@@ -32,8 +32,7 @@ type ModalState = null | "new" | DetailModal;
 
 export default function AcquisitionsPage() {
   const { user, token, isLoading } = useAuth(); 
-  const { userRole } = useCollection();
-  const canWrite = userRole !== "viewer";
+  const { userRole, canWrite } = useCollection();
   const router = useRouter();
   const [acquisitions, setAcquisitions] = useState<Acquisition[]>([]);
   const [objects, setObjects] = useState<CollectionObject[]>([]);

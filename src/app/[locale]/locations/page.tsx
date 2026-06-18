@@ -35,8 +35,7 @@ function fromLocation(l: Location): FormState {
 
 export default function LocationsPage() {
   const { user, token, isLoading } = useAuth();
-  const { userRole } = useCollection();
-  const canWrite = userRole !== "viewer";
+  const { userRole, canWrite } = useCollection();
   const router = useRouter();
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);

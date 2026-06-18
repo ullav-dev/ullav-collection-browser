@@ -53,8 +53,7 @@ function SectionEmpty({ message }: { message: string }) {
 
 export default function ObjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { user, token, roles, isLoading } = useAuth();
-  const { userRole } = useCollection();
-  const canWrite = userRole !== "viewer";
+  const { userRole, canWrite } = useCollection();
   const router = useRouter();
   const locale = useLocale();
   const [id, setId] = useState<string | null>(null);

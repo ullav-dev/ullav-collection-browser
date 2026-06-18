@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -17,6 +18,7 @@ import {
 } from "@/lib/collection-api";
 
 import TeamSection from "@/components/TeamSection";
+import CollectionsSection from "@/components/CollectionsSection";
 
 // ── AI provider model options ─────────────────────────────────────────────────
 
@@ -378,10 +380,16 @@ function SchemeForm({ initial, onSave, onCancel }: SchemeFormProps) {
   );
 }
 
-export default function SettingsPage() {
-  const { user, token, isLoading } = useAuth();
-  const router = useRouter();
+type SettingsTab = "ai" | "teams" | "collections" | "schemes";
 
+const TABS: { key: SettingsTab; label: string }[] = [
+  { key: "ai", label: "AI Assistant" },
+  { key: "teams", label: "Teams" },
+  { key: "collections", label: "Collections" },
+  { key: "schemes", label: "Accession Schemes" },
+];
+
+function AccessionSchemesSection({ token }: { token: string }) {
   const [schemes, setSchemes] = useState<NumberScheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -389,12 +397,7 @@ export default function SettingsPage() {
   const [editing, setEditing] = useState<NumberScheme | null>(null);
   const [previews, setPreviews] = useState<Record<string, NumberSchemePreview>>({});
 
-  useEffect(() => {
-    if (!isLoading && !user) router.replace("/login");
-  }, [isLoading, user, router]);
-
   const loadSchemes = useCallback(async () => {
-    if (!token) return;
     setLoading(true);
     try {
       const data = await listNumberSchemes(token);
@@ -406,27 +409,19 @@ export default function SettingsPage() {
     }
   }, [token]);
 
-  useEffect(() => {
-    if (token) loadSchemes();
-  }, [loadSchemes, token]);
+  useEffect(() => { loadSchemes(); }, [loadSchemes]);
 
   async function loadPreview(scheme: NumberScheme) {
-    if (!token || previews[scheme.id]) return;
+    if (previews[scheme.id]) return;
     try {
       const p = await previewNumberScheme(token, scheme.id);
       setPreviews((prev) => ({ ...prev, [scheme.id]: p }));
-    } catch {
-      // preview failure is non-critical
-    }
+    } catch { /* non-critical */ }
   }
 
-  useEffect(() => {
-    schemes.forEach(loadPreview);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schemes]);
+  useEffect(() => { schemes.forEach(loadPreview); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [schemes]);
 
   async function handleCreate(data: Partial<NumberScheme>) {
-    if (!token) return;
     await createNumberScheme(token, data);
     setCreating(false);
     setPreviews({});
@@ -434,130 +429,162 @@ export default function SettingsPage() {
   }
 
   async function handleUpdate(data: Partial<NumberScheme>) {
-    if (!token || !editing) return;
+    if (!editing) return;
     await updateNumberScheme(token, editing.id, data);
     setEditing(null);
     setPreviews({});
     await loadSchemes();
   }
 
+  return (
+    <>
+      {!creating && !editing && (
+        <div className="flex justify-end mb-4">
+          <button
+            type="button"
+            onClick={() => setCreating(true)}
+            className="inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            New scheme
+          </button>
+        </div>
+      )}
+      {error && <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">{error}</div>}
+      {creating && (
+        <div className="bg-white rounded-2xl border border-teal-200 shadow-sm p-6 mb-4">
+          <h3 className="font-medium text-slate-700 mb-4">New scheme</h3>
+          <SchemeForm onSave={handleCreate} onCancel={() => setCreating(false)} />
+        </div>
+      )}
+      {loading ? (
+        <p className="text-sm text-slate-400 py-8 text-center">Loading…</p>
+      ) : schemes.length === 0 && !creating ? (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
+          <p className="text-slate-400 text-sm mb-3">No number schemes defined yet.</p>
+          <button type="button" onClick={() => setCreating(true)} className="text-teal-600 hover:text-teal-700 text-sm font-medium">Create your first scheme →</button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {schemes.map((s) => (
+            <div key={s.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm">
+              {editing?.id === s.id ? (
+                <div className="p-6">
+                  <h3 className="font-medium text-slate-700 mb-4">Edit scheme</h3>
+                  <SchemeForm initial={s} onSave={handleUpdate} onCancel={() => setEditing(null)} />
+                </div>
+              ) : (
+                <div className="p-5 flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-slate-800 text-sm">{s.name}</span>
+                      {s.is_default && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700">Default</span>}
+                    </div>
+                    <p className="font-mono text-xs text-slate-500 mb-1">{s.format_template}</p>
+                    {previews[s.id] && (
+                      <p className="text-xs text-slate-400">
+                        Next: <span className="font-mono font-medium text-teal-700">{previews[s.id].next_number}</span>
+                        {" "}· Used {s.last_sequence} number{s.last_sequence !== 1 ? "s" : ""}
+                      </p>
+                    )}
+                  </div>
+                  <button type="button" onClick={() => setEditing(s)} className="text-sm text-slate-400 hover:text-slate-700 transition-colors shrink-0">Edit</button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+export default function SettingsPage() {
+  const { user, token, isLoading } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab") as SettingsTab | null;
+  const [activeTab, setActiveTab] = useState<SettingsTab>(
+    tabParam && TABS.some(t => t.key === tabParam) ? tabParam : "ai"
+  );
+
+  useEffect(() => {
+    if (!isLoading && !user) router.replace("/login");
+  }, [isLoading, user, router]);
+
+  // Sync tab from URL (e.g. nav links to ?tab=collections).
+  useEffect(() => {
+    if (tabParam && TABS.some(t => t.key === tabParam)) setActiveTab(tabParam);
+  }, [tabParam]);
+
   if (isLoading || !user) return null;
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="text-xl font-bold text-slate-800 mb-8">Settings</h1>
+      <h1 className="text-xl font-bold text-slate-800 mb-6">Settings</h1>
 
-      {/* AI Assistant */}
-      <section className="mb-10">
-        <div className="mb-4">
-          <h2 className="font-semibold text-slate-700">AI Assistant</h2>
-          <p className="text-sm text-slate-400 mt-0.5">
-            Configure your AI provider for the Research assistant. Keys are encrypted at rest.
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-          <AiSettingsSection token={token!} />
-        </div>
-      </section>
+      {/* Tab strip */}
+      <div className="flex gap-1 border-b border-slate-200 mb-8 overflow-x-auto">
+        {TABS.map(t => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => setActiveTab(t.key)}
+            className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors ${
+              activeTab === t.key
+                ? "border-teal-500 text-teal-700"
+                : "border-transparent text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-      {/* Team management */}
-      <section className="mb-10">
-        <div className="mb-4">
-          <h2 className="font-semibold text-slate-700">Team</h2>
-          <p className="text-sm text-slate-400 mt-0.5">
-            Manage members and Cartlann roles for your team. Team creation and ownership is handled via the Ullav Portal.
-          </p>
-        </div>
-        <TeamSection />
-      </section>
+      {activeTab === "ai" && (
+        <section>
+          <div className="mb-4">
+            <h2 className="font-semibold text-slate-700">AI Assistant</h2>
+            <p className="text-sm text-slate-400 mt-0.5">Configure your AI provider for the Research assistant. Keys are encrypted at rest.</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <AiSettingsSection token={token!} />
+          </div>
+        </section>
+      )}
 
-      {/* Accession Number Schemes */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <div>
+      {activeTab === "teams" && (
+        <section>
+          <div className="mb-4">
+            <h2 className="font-semibold text-slate-700">Teams</h2>
+            <p className="text-sm text-slate-400 mt-0.5">Manage members and Cartlann roles. Team creation and ownership transfer are handled via the Ullav Portal.</p>
+          </div>
+          <TeamSection />
+        </section>
+      )}
+
+      {activeTab === "collections" && (
+        <section>
+          <div className="mb-4">
+            <h2 className="font-semibold text-slate-700">Collections</h2>
+            <p className="text-sm text-slate-400 mt-0.5">Create and manage collections. Each collection belongs to a team. Admins and collection owners can edit, delete, and manage per-collection access.</p>
+          </div>
+          <CollectionsSection />
+        </section>
+      )}
+
+      {activeTab === "schemes" && (
+        <section>
+          <div className="mb-4">
             <h2 className="font-semibold text-slate-700">Accession Number Schemes</h2>
-            <p className="text-sm text-slate-400 mt-0.5">
-              Define how accession numbers are generated for your collection.
-            </p>
+            <p className="text-sm text-slate-400 mt-0.5">Define how accession numbers are generated for your collection.</p>
           </div>
-          {!creating && !editing && (
-            <button
-              type="button"
-              onClick={() => setCreating(true)}
-              className="inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              New scheme
-            </button>
-          )}
-        </div>
+          <AccessionSchemesSection token={token!} />
+        </section>
+      )}
 
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">{error}</div>
-        )}
-
-        {creating && (
-          <div className="bg-white rounded-2xl border border-teal-200 shadow-sm p-6 mb-4">
-            <h3 className="font-medium text-slate-700 mb-4">New scheme</h3>
-            <SchemeForm onSave={handleCreate} onCancel={() => setCreating(false)} />
-          </div>
-        )}
-
-        {loading ? (
-          <p className="text-sm text-slate-400 py-8 text-center">Loading…</p>
-        ) : schemes.length === 0 && !creating ? (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
-            <p className="text-slate-400 text-sm mb-3">No number schemes defined yet.</p>
-            <button
-              type="button"
-              onClick={() => setCreating(true)}
-              className="text-teal-600 hover:text-teal-700 text-sm font-medium"
-            >
-              Create your first scheme →
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {schemes.map((s) => (
-              <div key={s.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm">
-                {editing?.id === s.id ? (
-                  <div className="p-6">
-                    <h3 className="font-medium text-slate-700 mb-4">Edit scheme</h3>
-                    <SchemeForm initial={s} onSave={handleUpdate} onCancel={() => setEditing(null)} />
-                  </div>
-                ) : (
-                  <div className="p-5 flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-slate-800 text-sm">{s.name}</span>
-                        {s.is_default && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700">Default</span>
-                        )}
-                      </div>
-                      <p className="font-mono text-xs text-slate-500 mb-1">{s.format_template}</p>
-                      {previews[s.id] && (
-                        <p className="text-xs text-slate-400">
-                          Next: <span className="font-mono font-medium text-teal-700">{previews[s.id].next_number}</span>
-                          {" "}· Used {s.last_sequence} number{s.last_sequence !== 1 ? "s" : ""}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setEditing(s)}
-                      className="text-sm text-slate-400 hover:text-slate-700 transition-colors shrink-0"
-                    >
-                      Edit
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 }

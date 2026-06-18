@@ -34,7 +34,7 @@ export default function Nav() {
   const router = useRouter();
   const locale = useLocale();
   const { user, token, roles, isLoading, logout } = useAuth();
-  const { activeCollection, collections, teams, userRole, switchCollection } = useCollection();
+  const { activeCollection, collections, teams, userRole, canManageCollection, switchCollection } = useCollection();
   const t = useTranslations("nav");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [collectionOpen, setCollectionOpen] = useState(false);
@@ -126,7 +126,7 @@ export default function Nav() {
                           <CollectionItem key={c.id} collection={c} active={c.id === activeCollection?.id} onSelect={() => { switchCollection(c.id); setCollectionOpen(false); }} />
                         ))
                     }
-                    {userRole === "admin" && (
+                    {canManageCollection && (
                       <>
                         <div className="my-1 border-t border-slate-100" />
                         <Link

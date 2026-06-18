@@ -38,8 +38,7 @@ function toLabelObject(obj: CollectionObject): LabelObject {
 
 export default function ObjectsPage() {
   const { user, token, isLoading } = useAuth();
-  const { userRole } = useCollection();
-  const canWrite = userRole !== "viewer";
+  const { userRole, canWrite } = useCollection();
   const router = useRouter();
   const locale = useLocale();
 

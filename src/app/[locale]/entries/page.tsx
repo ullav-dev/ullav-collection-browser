@@ -44,8 +44,7 @@ function fromEntry(e: ObjectEntry): FormState {
 
 export default function EntriesPage() {
   const { user, token, isLoading } = useAuth(); 
-  const { userRole } = useCollection();
-  const canWrite = userRole !== "viewer";
+  const { userRole, canWrite } = useCollection();
   const router = useRouter();
   const [entries, setEntries] = useState<ObjectEntry[]>([]);
   const [parties, setParties] = useState<Party[]>([]);
