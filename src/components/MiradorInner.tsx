@@ -22,19 +22,33 @@ interface Props {
 // Mirador 4 and MAE 1.x produce several console.error warnings under React 19:
 //   - element.ref deprecation (React 19 compat — still functional)
 //   - <HotKey /> casing (Mirador internal component)
+//   - tReady prop leak from react-i18next inside Mirador
 // These are all third-party library issues; suppress them while Mirador is mounted.
 const MIRADOR_SUPPRESSED_WARNINGS = [
   "Accessing element.ref was removed",
   "is using incorrect casing",
   "is unrecognized in this browser",
   "synchronously unmount a root while React was already rendering",
-  "React does not recognize the `tReady` prop",
+  "React does not recognize the",  // catches tReady and other MUI/i18n prop leaks
 ];
+
+// Known prop names that trigger "React does not recognize" from Mirador internals.
+const MIRADOR_SUPPRESSED_PROPS = ["tReady", "fetchDefaultNamespace", "defaultNS", "i18nOptions"];
 
 function suppressMiradorWarnings() {
   const orig = console.error.bind(console);
   console.error = (...args: unknown[]) => {
-    if (typeof args[0] === "string" && MIRADOR_SUPPRESSED_WARNINGS.some((w) => (args[0] as string).includes(w))) return;
+    if (typeof args[0] === "string") {
+      const msg = args[0];
+      // React formats unknown-prop warnings as console.error(template, propName, ...).
+      // Check args[1] for known Mirador prop names before falling through.
+      if (
+        MIRADOR_SUPPRESSED_WARNINGS.some((w) => msg.includes(w)) &&
+        (msg.includes("React does not recognize the")
+          ? MIRADOR_SUPPRESSED_PROPS.some((p) => String(args[1] ?? "").includes(p))
+          : true)
+      ) return;
+    }
     orig(...args);
   };
   return () => { console.error = orig; };
