@@ -529,6 +529,7 @@ export interface ResearchNote {
   parent_id: string | null;
   reply_count: number;
   object_ids: string[];
+  canvas_id: string | null;
   created_at: string;
   updated_at: string;
 }

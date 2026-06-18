@@ -11,18 +11,25 @@ import {
   listTreatments, createTreatment,
   listObjectLoans, createObjectLoan,
   listParties, listLocations, moveObject,
-  listObjectNotes,
+  listObjectNotes, setNoteObjects,
   type CollectionObject, type ObjectMovement, type ObjectPart,
   type ConditionCheck, type ConservationTreatment, type Loan,
   type Party, type Location, type ResearchNote,
 } from "@/lib/collection-api";
 import dynamic from "next/dynamic";
+import { ANNOTATION_SAVED_EVENT } from "@/components/AnnotationEditorPanel";
 import Modal from "@/components/Modal";
 import FormField, { inputCls, selectCls, ErrorBox, SaveButton } from "@/components/FormField";
 
 const LabelPrintModal = dynamic(() => import("@/components/LabelPrintModal"), { ssr: false });
+const IiifViewerModal = dynamic(
+  () => import("@/components/IiifViewerModal").then((m) => ({ default: m.IiifViewerModal })),
+  { ssr: false },
+);
+const MiradorInner = dynamic(() => import("@/components/MiradorInner"), { ssr: false });
+const AnnotationEditorPanel = dynamic(() => import("@/components/AnnotationEditorPanel"), { ssr: false });
 
-type Tab = "details" | "condition" | "conservation" | "loans" | "movements" | "parts" | "research";
+type Tab = "details" | "condition" | "conservation" | "loans" | "movements" | "parts" | "research" | "viewer";
 
 const GRADE_COLOUR: Record<string, string> = {
   excellent: "bg-teal-100 text-teal-700",
@@ -53,14 +60,24 @@ function SectionEmpty({ message }: { message: string }) {
 
 export default function ObjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { user, token, roles, isLoading } = useAuth();
-  const { userRole, canWrite } = useCollection();
+  const { userRole, canWrite, activeCollection } = useCollection();
   const router = useRouter();
   const locale = useLocale();
   const [id, setId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("details");
 
+  // Honour ?tab= query param on initial load (e.g. "View in IIIF Viewer" links from Research panel)
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get("tab");
+    const valid: Tab[] = ["details","condition","conservation","loans","movements","parts","research","viewer"];
+    if (p && (valid as string[]).includes(p)) setTab(p as Tab);
+  }, []);
+
   const [object, setObject] = useState<CollectionObject | null>(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerManifestUrl, setViewerManifestUrl] = useState<string | null>(null);
+  const [miradorManifestUrl, setMiradorManifestUrl] = useState<string | null>(null);
   const [movements, setMovements] = useState<ObjectMovement[]>([]);
   const [parts, setParts] = useState<ObjectPart[]>([]);
   const [conditionChecks, setConditionChecks] = useState<ConditionCheck[]>([]);
@@ -141,6 +158,32 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
     if (token && id) load();
   }, [load, token, id]);
 
+  // When an annotation is saved: link the note to this object, then reload the notes list.
+  useEffect(() => {
+    function handleAnnotationSaved(e: Event) {
+      if (!token || !id) return;
+      const { noteId } = (e as CustomEvent<{ noteId?: string }>).detail ?? {};
+      if (noteId) {
+        // Link the canvas annotation note to this collection object so Research panel
+        // can navigate back here via note.object_ids[0].
+        setNoteObjects(token, noteId, [id]).catch(() => {});
+      }
+      listObjectNotes(token, id).then(setObjectNotes).catch(() => {});
+    }
+    window.addEventListener(ANNOTATION_SAVED_EVENT, handleAnnotationSaved);
+    return () => window.removeEventListener(ANNOTATION_SAVED_EVENT, handleAnnotationSaved);
+  }, [token, id]);
+
+  // Auto-build the Mirador manifest when the viewer tab becomes active.
+  // Handles both the URL ?tab=viewer entry path and direct tab-bar clicks.
+  useEffect(() => {
+    if (tab !== "viewer" || miradorManifestUrl || !object?.primary_image_asset_id) return;
+    buildMiradorManifest(object.primary_image_asset_id).then((url) => {
+      if (url) setMiradorManifestUrl(url);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, object, miradorManifestUrl]);
+
   // Lazy-load research notes when the Research tab is first opened
   useEffect(() => {
     if (tab !== "research" || notesLoaded || !token || !id) return;
@@ -170,6 +213,37 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
     );
   }
 
+  async function buildMiradorManifest(assetId: string): Promise<string | null> {
+    if (!token) return null;
+    try {
+      const res = await fetch(`/api/dam/iiif/manifest/${assetId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return null;
+      const manifest = await res.json() as Record<string, unknown>;
+      const manifestId = typeof manifest.id === "string" ? manifest.id : "";
+      const serverBase = manifestId.replace(/\/iiif\/manifest\/[^/]+$/, "");
+      const origin = window.location.origin;
+      let manifestStr = JSON.stringify(manifest);
+      if (serverBase) manifestStr = manifestStr.split(serverBase).join(`${origin}/api`);
+      const secure = window.location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = `iiif_access_token=${token}; path=/api/iiif/image; SameSite=Strict; Max-Age=3600${secure}`;
+      const blob = new Blob([manifestStr], { type: "application/ld+json" });
+      return URL.createObjectURL(blob);
+    } catch {
+      return null;
+    }
+  }
+
+  async function handleOpenViewerTab() {
+    if (!object?.primary_image_asset_id) return;
+    if (!miradorManifestUrl) {
+      const url = await buildMiradorManifest(object.primary_image_asset_id);
+      if (url) setMiradorManifestUrl(url);
+    }
+    setTab("viewer");
+  }
+
   const tabs: { key: Tab; label: string; count?: number }[] = [
     { key: "details", label: "Details" },
     { key: "condition", label: "Condition", count: conditionChecks.length },
@@ -178,7 +252,44 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
     { key: "movements", label: "Movements", count: movements.length },
     { key: "parts", label: "Parts", count: parts.length },
     { key: "research", label: "Research", count: notesLoaded ? objectNotes.length : undefined },
+    ...(object.primary_image_asset_id ? [{ key: "viewer" as Tab, label: "Viewer" }] : []),
   ];
+
+  async function handleOpenViewer(assetId: string) {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/dam/iiif/manifest/${assetId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const manifest = await res.json() as Record<string, unknown>;
+
+      // Rewrite server URLs through the local IIIF image proxy so tiles carry auth.
+      const manifestId = typeof manifest.id === "string" ? manifest.id : "";
+      const serverBase = manifestId.replace(/\/iiif\/manifest\/[^/]+$/, "");
+      const origin = window.location.origin;
+      let manifestStr = JSON.stringify(manifest);
+      if (serverBase) {
+        manifestStr = manifestStr.split(serverBase).join(`${origin}/api`);
+      }
+
+      const secure = window.location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = `iiif_access_token=${token}; path=/api/iiif/image; SameSite=Strict; Max-Age=3600${secure}`;
+
+      const blob = new Blob([manifestStr], { type: "application/ld+json" });
+      setViewerManifestUrl(URL.createObjectURL(blob));
+      setViewerOpen(true);
+    } catch {
+      // ignore — viewer simply won't open
+    }
+  }
+
+  function handleCloseViewer() {
+    if (viewerManifestUrl?.startsWith("blob:")) URL.revokeObjectURL(viewerManifestUrl);
+    setViewerManifestUrl(null);
+    setViewerOpen(false);
+    document.cookie = "iiif_access_token=; path=/api/iiif/image; Max-Age=0; SameSite=Strict";
+  }
 
   const dateLabel = object.date_from != null
     ? (object.date_to && object.date_to !== object.date_from
@@ -259,6 +370,17 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
             className="rounded-xl border border-slate-200 bg-slate-50 object-contain max-h-64 max-w-xs shadow-sm"
           />
           <div className="flex flex-col gap-2 pt-1">
+            <button
+              type="button"
+              onClick={handleOpenViewerTab}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-700 hover:text-teal-800 border border-teal-200 hover:border-teal-300 hover:bg-teal-50 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+              </svg>
+              Open IIIF Viewer
+            </button>
             <button
               type="button"
               onClick={() => {
@@ -585,10 +707,54 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
             locale={locale}
             notes={objectNotes}
             loading={notesLoading}
+            onViewInMirador={object.primary_image_asset_id ? handleOpenViewerTab : undefined}
           />
         )}
       </div>
     </div>
+
+    {/* Viewer tab — full-width split layout outside the max-w-5xl container */}
+    {tab === "viewer" && token && user && (
+      <div
+        className="w-full flex bg-slate-900"
+        style={{ height: "calc(100vh - 12rem)" }}
+      >
+        {/* Mirador viewer — takes ~70% width */}
+        <div className="flex-1 min-w-0">
+          {miradorManifestUrl ? (
+            <MiradorInner
+              manifestUrl={miradorManifestUrl}
+              token={token}
+              username={user.username}
+              collectionId={activeCollection?.id}
+              onAllWindowsClosed={() => setTab("details")}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-slate-400 text-sm">
+              Loading viewer…
+            </div>
+          )}
+        </div>
+
+        {/* Annotation editor panel — fixed width sidebar */}
+        <div className="relative w-72 shrink-0 border-l border-slate-700 overflow-hidden">
+          <AnnotationEditorPanel
+            token={token}
+            username={user.username}
+            damApiBase="/api/dam"
+            collectionId={activeCollection?.id}
+          />
+        </div>
+      </div>
+    )}
+
+    {viewerOpen && viewerManifestUrl && object && (
+      <IiifViewerModal
+        manifestUrl={viewerManifestUrl}
+        objectTitle={object.title}
+        onClose={handleCloseViewer}
+      />
+    )}
 
     {showPrintModal && object && (
       <LabelPrintModal
@@ -656,11 +822,13 @@ function ResearchTabContent({
   locale,
   notes,
   loading,
+  onViewInMirador,
 }: {
   objectId: string;
   locale: string;
   notes: ResearchNote[];
   loading: boolean;
+  onViewInMirador?: () => void;
 }) {
   return (
     <div>
@@ -710,10 +878,10 @@ function ResearchTabContent({
       ) : (
         <div className="space-y-2">
           {notes.map((note) => (
+            <div key={note.id} className="flex items-center gap-2">
             <Link
-              key={note.id}
               href={`/${locale}/research?noteId=${note.id}`}
-              className="group flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:border-teal-200 hover:bg-teal-50/50 transition-colors"
+              className="group flex flex-1 items-start gap-3 p-3 rounded-xl border border-slate-200 hover:border-teal-200 hover:bg-teal-50/50 transition-colors"
             >
               <svg className="w-4 h-4 text-slate-300 group-hover:text-teal-400 transition-colors mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
@@ -727,6 +895,9 @@ function ResearchTabContent({
                 )}
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <span className="text-[11px] text-slate-400">{noteRelativeTime(note.updated_at)}</span>
+                  {note.canvas_id && (
+                    <span className="text-[10px] font-medium text-teal-700 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded-full">📍 Spatial</span>
+                  )}
                   {note.is_shared && (
                     <span className="text-[10px] font-medium text-teal-600 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded-full">Shared</span>
                   )}
@@ -739,6 +910,17 @@ function ResearchTabContent({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </Link>
+            {note.canvas_id && onViewInMirador && (
+              <button
+                type="button"
+                onClick={onViewInMirador}
+                className="shrink-0 text-[10px] font-medium text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-400 px-2 py-0.5 rounded transition-colors"
+                title="View in IIIF Viewer"
+              >
+                View
+              </button>
+            )}
+            </div>
           ))}
         </div>
       )}
