@@ -33,7 +33,7 @@ type ModalState = null | "new" | DetailModal;
 
 export default function AcquisitionsPage() {
   const { user, token, isLoading } = useAuth(); 
-  const { userRole, canWrite } = useCollection();
+  const { userRole, canWrite, activeCollection } = useCollection();
   const router = useRouter();
   const [acquisitions, setAcquisitions] = useState<Acquisition[]>([]);
   const [objects, setObjects] = useState<CollectionObject[]>([]);
@@ -59,7 +59,7 @@ export default function AcquisitionsPage() {
       setAcquisitions(acqs); setObjects(objs); setEntries(ents); setParties(parts);
     } catch (e) { setError(e instanceof Error ? e.message : "Failed to load"); }
     finally { setLoading(false); }
-  }, [token]);
+  }, [token, activeCollection?.id]);
 
   useEffect(() => { if (token) load(); }, [load, token]);
 
