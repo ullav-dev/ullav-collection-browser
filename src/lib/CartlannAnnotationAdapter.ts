@@ -68,6 +68,7 @@ export class CartlannAnnotationAdapter {
         annotation,
       }),
     });
+    if (!res.ok) throw new Error(`Failed to create annotation: ${res.status}`);
     // Return a full AnnotationPage so MAE can update its store
     const saved: W3CAnnotation = await res.json();
     const page = (await this.all()) ?? {
