@@ -21,11 +21,26 @@ export class CartlannAnnotationAdapter {
   readonly annotationPageId: string;
   private readonly token: string;
   private readonly username: string;
+  private readonly getCollectionId: () => string | undefined;
 
-  constructor(annotationPageId: string, username: string, token: string) {
+  constructor(
+    annotationPageId: string,
+    username: string,
+    token: string,
+    /** Pass a getter so the ID is read at request time, not at construction time. */
+    getCollectionId?: () => string | undefined,
+  ) {
     this.annotationPageId = annotationPageId;
     this.username = username;
     this.token = token;
+    this.getCollectionId = getCollectionId ?? (() => undefined);
+  }
+
+  private authHeaders(): Record<string, string> {
+    const h: Record<string, string> = { Authorization: `Bearer ${this.token}` };
+    const cid = this.getCollectionId();
+    if (cid) h["X-Collection-Id"] = cid;
+    return h;
   }
 
   getStorageAdapterUser(): string {
@@ -35,7 +50,7 @@ export class CartlannAnnotationAdapter {
   async all(): Promise<AnnotationPage | null> {
     const res = await fetch(
       `/api/canvas-annotations?canvas_id=${encodeURIComponent(this.annotationPageId)}`,
-      { headers: { Authorization: `Bearer ${this.token}` } },
+      { headers: this.authHeaders() },
     );
     if (!res.ok) return null;
     return res.json();
@@ -46,7 +61,7 @@ export class CartlannAnnotationAdapter {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.token}`,
+        ...this.authHeaders(),
       },
       body: JSON.stringify({
         canvas_id: this.annotationPageId,
@@ -68,10 +83,7 @@ export class CartlannAnnotationAdapter {
     if (!id) return null;
     const res = await fetch(`/api/canvas-annotations/${id}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.token}`,
-      },
+      headers: { "Content-Type": "application/json", ...this.authHeaders() },
       body: JSON.stringify({ annotation }),
     });
     if (!res.ok) return null;
@@ -83,7 +95,7 @@ export class CartlannAnnotationAdapter {
     if (!id) return null;
     await fetch(`/api/canvas-annotations/${id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${this.token}` },
+      headers: this.authHeaders(),
     });
     return this.all();
   }
@@ -92,7 +104,7 @@ export class CartlannAnnotationAdapter {
     const id = noteIdFromAnnotationUri(annotationId);
     if (!id) return null;
     const res = await fetch(`/api/canvas-annotations/${id}`, {
-      headers: { Authorization: `Bearer ${this.token}` },
+      headers: this.authHeaders(),
     });
     if (!res.ok) return null;
     return res.json();

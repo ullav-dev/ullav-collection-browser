@@ -11,7 +11,7 @@ import {
   listTreatments, createTreatment,
   listObjectLoans, createObjectLoan,
   listParties, listLocations, moveObject,
-  listObjectNotes,
+  listObjectNotes, setNoteObjects,
   type CollectionObject, type ObjectMovement, type ObjectPart,
   type ConditionCheck, type ConservationTreatment, type Loan,
   type Party, type Location, type ResearchNote,
@@ -60,12 +60,19 @@ function SectionEmpty({ message }: { message: string }) {
 
 export default function ObjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { user, token, roles, isLoading } = useAuth();
-  const { userRole } = useCollection();
+  const { userRole, activeCollection } = useCollection();
   const canWrite = userRole !== "viewer";
   const router = useRouter();
   const locale = useLocale();
   const [id, setId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("details");
+
+  // Honour ?tab= query param on initial load (e.g. "View in IIIF Viewer" links from Research panel)
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get("tab");
+    const valid: Tab[] = ["details","condition","conservation","loans","movements","parts","research","viewer"];
+    if (p && (valid as string[]).includes(p)) setTab(p as Tab);
+  }, []);
 
   const [object, setObject] = useState<CollectionObject | null>(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
@@ -152,15 +159,31 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
     if (token && id) load();
   }, [load, token, id]);
 
-  // Reload notes when an annotation is saved from the viewer panel
+  // When an annotation is saved: link the note to this object, then reload the notes list.
   useEffect(() => {
-    function handleAnnotationSaved() {
+    function handleAnnotationSaved(e: Event) {
       if (!token || !id) return;
+      const { noteId } = (e as CustomEvent<{ noteId?: string }>).detail ?? {};
+      if (noteId) {
+        // Link the canvas annotation note to this collection object so Research panel
+        // can navigate back here via note.object_ids[0].
+        setNoteObjects(token, noteId, [id]).catch(() => {});
+      }
       listObjectNotes(token, id).then(setObjectNotes).catch(() => {});
     }
     window.addEventListener(ANNOTATION_SAVED_EVENT, handleAnnotationSaved);
     return () => window.removeEventListener(ANNOTATION_SAVED_EVENT, handleAnnotationSaved);
   }, [token, id]);
+
+  // Auto-build the Mirador manifest when the viewer tab becomes active.
+  // Handles both the URL ?tab=viewer entry path and direct tab-bar clicks.
+  useEffect(() => {
+    if (tab !== "viewer" || miradorManifestUrl || !object?.primary_image_asset_id) return;
+    buildMiradorManifest(object.primary_image_asset_id).then((url) => {
+      if (url) setMiradorManifestUrl(url);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, object, miradorManifestUrl]);
 
   // Lazy-load research notes when the Research tab is first opened
   useEffect(() => {
@@ -704,6 +727,8 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
               manifestUrl={miradorManifestUrl}
               token={token}
               username={user.username}
+              collectionId={activeCollection?.id}
+              onAllWindowsClosed={() => setTab("details")}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-slate-400 text-sm">
@@ -718,6 +743,7 @@ export default function ObjectDetailPage({ params }: { params: Promise<{ id: str
             token={token}
             username={user.username}
             damApiBase="/api/dam"
+            collectionId={activeCollection?.id}
           />
         </div>
       </div>
