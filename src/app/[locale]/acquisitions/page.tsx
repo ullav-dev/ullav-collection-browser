@@ -11,6 +11,7 @@ import {
 } from "@/lib/collection-api";
 import Modal from "@/components/Modal";
 import FormField, { inputCls, selectCls, ErrorBox, SaveButton } from "@/components/FormField";
+import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currencies";
 
 const METHODS = ["purchase", "gift", "bequest", "transfer", "found", "exchange", "commission", "other"];
 
@@ -24,7 +25,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 const EMPTY: FormState = {
   object_id: "", entry_id: "", accession_number: "",
   acquisition_date: today(), method: "gift", source_id: "",
-  price: "", currency: "GBP", authorisation_reference: "", notes: "",
+  price: "", currency: DEFAULT_CURRENCY, authorisation_reference: "", notes: "",
 };
 
 interface DetailModal { type: "detail"; acq: Acquisition }
@@ -32,8 +33,7 @@ type ModalState = null | "new" | DetailModal;
 
 export default function AcquisitionsPage() {
   const { user, token, isLoading } = useAuth(); 
-  const { userRole } = useCollection();
-  const canWrite = userRole !== "viewer";
+  const { userRole, canWrite, activeCollection } = useCollection();
   const router = useRouter();
   const [acquisitions, setAcquisitions] = useState<Acquisition[]>([]);
   const [objects, setObjects] = useState<CollectionObject[]>([]);
@@ -59,7 +59,7 @@ export default function AcquisitionsPage() {
       setAcquisitions(acqs); setObjects(objs); setEntries(ents); setParties(parts);
     } catch (e) { setError(e instanceof Error ? e.message : "Failed to load"); }
     finally { setLoading(false); }
-  }, [token]);
+  }, [token, activeCollection?.id]);
 
   useEffect(() => { if (token) load(); }, [load, token]);
 
@@ -192,7 +192,9 @@ export default function AcquisitionsPage() {
                 <input id="acq-price" type="number" step="0.01" value={form.price} onChange={e => set("price", e.target.value)} className={inputCls} />
               </FormField>
               <FormField label="Currency" htmlFor="acq-currency">
-                <input id="acq-currency" value={form.currency} onChange={e => set("currency", e.target.value)} className={inputCls} placeholder="GBP" />
+                <select id="acq-currency" value={form.currency} onChange={e => set("currency", e.target.value)} className={selectCls}>
+                  {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
               </FormField>
             </div>
             <FormField label="Authorisation reference" htmlFor="acq-auth">

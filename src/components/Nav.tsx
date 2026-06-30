@@ -8,6 +8,7 @@ import { useCollection } from "@/contexts/CollectionContext";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 import UserAvatar, { userDisplayName } from "@/components/UserAvatar";
 import AboutModal from "@/components/AboutModal";
+import TeamSwitcher from "@/components/TeamSwitcher";
 
 // Named window target — browser reuses the same tab if it's already open.
 const COMAD_WINDOW_NAME = "cartlann_comad";
@@ -34,7 +35,7 @@ export default function Nav() {
   const router = useRouter();
   const locale = useLocale();
   const { user, token, roles, isLoading, logout } = useAuth();
-  const { activeCollection, collections, teams, userRole, switchCollection } = useCollection();
+  const { activeCollection, collections, teams, userRole, canManageCollection, switchCollection } = useCollection();
   const t = useTranslations("nav");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [collectionOpen, setCollectionOpen] = useState(false);
@@ -81,34 +82,38 @@ export default function Nav() {
     <header className="bg-white border-b border-slate-200 shadow-sm shrink-0">
       <div className="max-w-full px-4 sm:px-6">
         <div className="flex items-center justify-between h-14">
-          {/* Logo + collection switcher */}
+          {/* Logo + team/collection switchers */}
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2.5">
               <CartlannIcon />
               <span className="font-bold text-lg text-slate-800 tracking-tight">Cartlann</span>
             </Link>
 
-            {/* Collection switcher — only shown when logged in with >0 collections */}
+            {/* Team switcher — only visible when collections span multiple teams */}
+            {user && <TeamSwitcher />}
+
+            {/* Collection switcher — active collection shown as a prominent workspace badge */}
             {user && collections.length > 0 && (
               <div className="relative" ref={collectionRef}>
                 <button
                   type="button"
                   onClick={() => setCollectionOpen((v) => !v)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-teal-300 hover:bg-teal-50 text-sm font-medium text-slate-700 transition-colors max-w-[180px]"
+                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition-colors max-w-[220px] shadow-sm"
                   title="Switch collection"
                 >
-                  <svg className="w-3.5 h-3.5 text-teal-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-3.5 h-3.5 shrink-0 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
                   <span className="truncate">{activeCollection?.name ?? "Collection"}</span>
-                  <svg className={`w-3 h-3 text-slate-400 shrink-0 transition-transform ${collectionOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
+                  <svg className={`w-3 h-3 opacity-70 shrink-0 transition-transform ${collectionOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                   </svg>
                 </button>
 
                 {collectionOpen && (
-                  <div className="absolute left-0 top-full mt-1 w-64 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
-                    {/* Group collections by team */}
+                  <div className="absolute left-0 top-full mt-1 w-72 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
+                    <p className="px-4 pt-2 pb-1 text-xs font-semibold text-slate-400 uppercase tracking-wide">Switch collection</p>
+                    {/* Group collections by team when there are multiple teams */}
                     {teams.length > 1
                       ? teams.map((team) => {
                           const teamCollections = collections.filter((c) => c.team_id === team.id);
@@ -117,16 +122,26 @@ export default function Nav() {
                             <div key={team.id}>
                               <p className="px-4 pt-2 pb-1 text-xs font-semibold text-slate-400 uppercase tracking-wide">{team.name}</p>
                               {teamCollections.map((c) => (
-                                <CollectionItem key={c.id} collection={c} active={c.id === activeCollection?.id} onSelect={() => { switchCollection(c.id); setCollectionOpen(false); }} />
+                                <CollectionItem
+                                  key={c.id}
+                                  collection={c}
+                                  active={c.id === activeCollection?.id}
+                                  onSelect={() => { switchCollection(c.id); setCollectionOpen(false); router.push("/objects"); }}
+                                />
                               ))}
                             </div>
                           );
                         })
                       : collections.map((c) => (
-                          <CollectionItem key={c.id} collection={c} active={c.id === activeCollection?.id} onSelect={() => { switchCollection(c.id); setCollectionOpen(false); }} />
+                          <CollectionItem
+                            key={c.id}
+                            collection={c}
+                            active={c.id === activeCollection?.id}
+                            onSelect={() => { switchCollection(c.id); setCollectionOpen(false); router.push("/objects"); }}
+                          />
                         ))
                     }
-                    {userRole === "admin" && (
+                    {canManageCollection && (
                       <>
                         <div className="my-1 border-t border-slate-100" />
                         <Link

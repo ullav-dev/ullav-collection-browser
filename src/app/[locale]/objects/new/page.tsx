@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { createObject, setObjectPrimaryAsset, type CreateObjectRequest } from "@/lib/collection-api";
-import DamPickerPanel from "@/components/DamPickerPanel";
+import dynamic from "next/dynamic";
 import type { PickedAsset } from "@ullav-dev/dam-picker";
+
+const DamPickerModal = dynamic(() => import("@/components/DamPickerModal"), { ssr: false });
 
 const inputCls =
   "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm w-full focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500";
@@ -30,6 +32,7 @@ export default function NewObjectPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pickedAsset, setPickedAsset] = useState<PickedAsset | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -102,6 +105,54 @@ export default function NewObjectPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
+
+        {/* ── Primary image — first step ──────────────────────────────────────── */}
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm font-semibold text-slate-700 mb-3">Primary image</p>
+
+          {pickedAsset ? (
+            <div className="flex items-start gap-4">
+              <img
+                src={pickedAsset.thumbnailUrl}
+                alt={pickedAsset.name}
+                className="w-24 h-24 object-cover rounded-lg border border-slate-200 bg-white shadow-sm shrink-0"
+              />
+              <div className="flex flex-col gap-1.5 min-w-0">
+                <p className="text-sm text-slate-700 font-medium truncate">{pickedAsset.name}</p>
+                <p className="text-xs text-slate-400">{pickedAsset.assetType}</p>
+                <div className="flex items-center gap-3 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => setPickerOpen(true)}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
+                  >
+                    <ImageIcon />
+                    Change image
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPickedAsset(null)}
+                    className="text-sm text-slate-400 hover:text-red-500 transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              className="w-full flex flex-col items-center justify-center gap-2 py-8 rounded-lg border-2 border-dashed border-slate-300 hover:border-teal-400 hover:bg-teal-50 transition-colors text-slate-500 hover:text-teal-600 cursor-pointer"
+            >
+              <ImageIcon className="w-8 h-8" />
+              <span className="text-sm font-medium">Browse Comad media library…</span>
+              <span className="text-xs text-slate-400">Select an image to use as the primary photo</span>
+            </button>
+          )}
+        </div>
+
+        {/* ── Core fields ─────────────────────────────────────────────────────── */}
         <Field label="Title *" htmlFor="title">
           <input id="title" required value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} />
         </Field>
@@ -169,43 +220,6 @@ export default function NewObjectPage() {
           <span className="text-sm text-slate-700">Publish to public portal</span>
         </label>
 
-        <div className="border-t border-slate-100 pt-4">
-          <p className="text-sm font-medium text-slate-700 mb-2">Primary image</p>
-          {pickedAsset ? (
-            <div className="flex items-start gap-4">
-              <img
-                src={pickedAsset.thumbnailUrl}
-                alt={pickedAsset.name}
-                className="w-20 h-20 object-cover rounded-lg border border-slate-200 bg-slate-50"
-              />
-              <div className="flex flex-col gap-1">
-                <p className="text-sm text-slate-700 font-medium">{pickedAsset.name}</p>
-                <button
-                  type="button"
-                  onClick={() => setPickedAsset(null)}
-                  className="text-xs text-red-500 hover:text-red-700 transition-colors self-start"
-                >
-                  Remove
-                </button>
-                <div className="mt-1">
-                  <DamPickerPanel
-                    token={token!}
-                    username={user.username}
-                    onSelect={setPickedAsset}
-                    label="Change image…"
-                  />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <DamPickerPanel
-              token={token!}
-              username={user.username}
-              onSelect={setPickedAsset}
-            />
-          )}
-        </div>
-
         <div className="flex gap-3 pt-2">
           <button
             type="submit"
@@ -222,6 +236,26 @@ export default function NewObjectPage() {
           </Link>
         </div>
       </form>
+
+      {pickerOpen && token && (
+        <DamPickerModal
+          token={token}
+          username={user.username}
+          onSelect={(asset) => {
+            setPickedAsset(asset);
+            if (!title) setTitle(asset.name);
+          }}
+          onClose={() => setPickerOpen(false)}
+        />
+      )}
     </div>
+  );
+}
+
+function ImageIcon({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 5.5 2-3.5 3 6z" clipRule="evenodd" />
+    </svg>
   );
 }

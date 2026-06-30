@@ -9,48 +9,48 @@ interface Props {
   onChange: (v: string) => void;
   placeholder?: string;
   minRows?: number;
+  dark?: boolean;
 }
 
-export default function MarkdownEditor({ value, onChange, placeholder, minRows = 12 }: Props) {
+export default function MarkdownEditor({ value, onChange, placeholder, minRows = 12, dark = false }: Props) {
   const [preview, setPreview] = useState(false);
 
+  const toolBtn = dark
+    ? "w-7 h-7 flex items-center justify-center text-xs text-slate-300 hover:text-slate-100 hover:bg-slate-600 rounded transition-colors"
+    : "w-7 h-7 flex items-center justify-center text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded transition-colors";
+
   return (
-    <div className="flex flex-col border border-slate-300 rounded-lg overflow-hidden focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500">
+    <div
+      className="flex flex-col border rounded-lg overflow-hidden focus-within:ring-1 focus-within:ring-teal-500 focus-within:border-teal-500"
+      style={{ borderColor: dark ? "#475569" : "#cbd5e1" }}
+    >
       {/* Toolbar */}
-      <div className="flex items-center justify-between bg-slate-50 border-b border-slate-200 px-3 py-1.5 gap-2">
+      <div
+        className="flex items-center justify-between border-b px-3 py-1.5 gap-2"
+        style={{ background: dark ? "#334155" : "#f8fafc", borderColor: dark ? "#475569" : "#e2e8f0" }}
+      >
         <div className="flex items-center gap-1">
-          <ToolButton title="Bold" onClick={() => wrap(value, onChange, "**", "**")}>
-            <strong>B</strong>
-          </ToolButton>
-          <ToolButton title="Italic" onClick={() => wrap(value, onChange, "_", "_")}>
-            <em>I</em>
-          </ToolButton>
-          <ToolButton title="Inline code" onClick={() => wrap(value, onChange, "`", "`")}>
-            <code className="text-xs">{"<>"}</code>
-          </ToolButton>
-          <div className="w-px h-4 bg-slate-200 mx-1" />
-          <ToolButton title="Bullet list" onClick={() => prepend(value, onChange, "- ")}>
-            <ListIcon />
-          </ToolButton>
-          <ToolButton title="Heading" onClick={() => prepend(value, onChange, "## ")}>
-            H
-          </ToolButton>
-          <ToolButton title="Blockquote" onClick={() => prepend(value, onChange, "> ")}>
-            &#8220;
-          </ToolButton>
-          <div className="w-px h-4 bg-slate-200 mx-1" />
-          <ToolButton title="Link" onClick={() => insertLink(value, onChange)}>
-            &#128279;
-          </ToolButton>
+          <button type="button" title="Bold" onClick={() => wrap(value, onChange, "**", "**")} className={toolBtn}><strong>B</strong></button>
+          <button type="button" title="Italic" onClick={() => wrap(value, onChange, "_", "_")} className={toolBtn}><em>I</em></button>
+          <button type="button" title="Inline code" onClick={() => wrap(value, onChange, "`", "`")} className={toolBtn}><code className="text-xs">{"<>"}</code></button>
+          <div className="w-px h-4 mx-1" style={{ background: dark ? "#475569" : "#e2e8f0" }} />
+          <button type="button" title="Bullet list" onClick={() => prepend(value, onChange, "- ")} className={toolBtn}><ListIcon /></button>
+          <button type="button" title="Heading" onClick={() => prepend(value, onChange, "## ")} className={toolBtn}>H</button>
+          <button type="button" title="Blockquote" onClick={() => prepend(value, onChange, "> ")} className={toolBtn}>&#8220;</button>
+          <div className="w-px h-4 mx-1" style={{ background: dark ? "#475569" : "#e2e8f0" }} />
+          <button type="button" title="Link" onClick={() => insertLink(value, onChange)} className={toolBtn}>&#128279;</button>
         </div>
         <button
           type="button"
           onClick={() => setPreview((v) => !v)}
-          className={`text-xs font-medium px-2.5 py-1 rounded-md transition-colors ${
+          className="text-xs font-medium px-2.5 py-1 rounded-md transition-colors"
+          style={
             preview
-              ? "bg-teal-600 text-white"
-              : "text-slate-500 hover:text-slate-700 hover:bg-slate-200"
-          }`}
+              ? { background: "#0d9488", color: "#fff" }
+              : dark
+                ? { color: "#94a3b8" }
+                : { color: "#64748b" }
+          }
         >
           {preview ? "Edit" : "Preview"}
         </button>
@@ -59,13 +59,17 @@ export default function MarkdownEditor({ value, onChange, placeholder, minRows =
       {/* Editor / Preview */}
       {preview ? (
         <div
-          className="px-3 py-3 min-h-[180px] prose prose-sm prose-slate max-w-none overflow-y-auto text-sm"
-          style={{ minHeight: `${minRows * 1.5}rem` }}
+          className="px-3 py-3 prose prose-sm max-w-none overflow-y-auto text-sm"
+          style={{
+            minHeight: `${minRows * 1.5}rem`,
+            background: dark ? "#1e293b" : "#fff",
+            color: dark ? "#f1f5f9" : undefined,
+          }}
         >
           {value.trim() ? (
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
           ) : (
-            <p className="text-slate-400 italic">Nothing to preview.</p>
+            <p style={{ color: dark ? "#64748b" : "#94a3b8", fontStyle: "italic" }}>Nothing to preview.</p>
           )}
         </div>
       ) : (
@@ -73,8 +77,12 @@ export default function MarkdownEditor({ value, onChange, placeholder, minRows =
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder ?? "Write in Markdown…"}
-          className="w-full px-3 py-3 text-sm text-slate-800 bg-white resize-y focus:outline-none"
-          style={{ minHeight: `${minRows * 1.5}rem` }}
+          className="w-full px-3 py-3 text-sm resize-y focus:outline-none"
+          style={{
+            minHeight: `${minRows * 1.5}rem`,
+            background: dark ? "#1e293b" : "#fff",
+            color: dark ? "#f1f5f9" : "#1e293b",
+          }}
         />
       )}
     </div>
@@ -88,29 +96,6 @@ export function MarkdownBody({ content }: { content: string }) {
     <div className="prose prose-sm prose-slate max-w-none text-sm">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
     </div>
-  );
-}
-
-// ── Toolbar helpers ───────────────────────────────────────────────────────────
-
-function ToolButton({
-  title,
-  onClick,
-  children,
-}: {
-  title: string;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      title={title}
-      onClick={onClick}
-      className="w-7 h-7 flex items-center justify-center text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded transition-colors"
-    >
-      {children}
-    </button>
   );
 }
 

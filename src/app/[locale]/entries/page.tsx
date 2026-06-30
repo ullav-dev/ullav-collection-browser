@@ -44,8 +44,7 @@ function fromEntry(e: ObjectEntry): FormState {
 
 export default function EntriesPage() {
   const { user, token, isLoading } = useAuth(); 
-  const { userRole } = useCollection();
-  const canWrite = userRole !== "viewer";
+  const { userRole, canWrite, activeCollection } = useCollection();
   const router = useRouter();
   const [entries, setEntries] = useState<ObjectEntry[]>([]);
   const [parties, setParties] = useState<Party[]>([]);
@@ -66,7 +65,7 @@ export default function EntriesPage() {
       setEntries(e); setParties(p);
     } catch (e) { setError(e instanceof Error ? e.message : "Failed to load"); }
     finally { setLoading(false); }
-  }, [token]);
+  }, [token, activeCollection?.id]);
 
   useEffect(() => { if (token) load(); }, [load, token]);
 

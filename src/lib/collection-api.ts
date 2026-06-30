@@ -76,6 +76,40 @@ export async function deleteCollection(token: string, id: string): Promise<void>
   return apiRequest<void>(`/collections/${id}`, token, { method: "DELETE" });
 }
 
+// ── Collection members ────────────────────────────────────────────────────────
+
+export interface CollectionMember {
+  id: string;
+  collection_id: string;
+  user_id: string;
+  display_name: string | null;
+  role: "owner" | "curator";
+  invited_by: string | null;
+  created_at: string;
+}
+
+export interface AddCollectionMemberRequest {
+  user_id: string;
+  display_name?: string;
+  role: "owner" | "curator";
+}
+
+export async function listCollectionMembers(token: string, collectionId: string): Promise<CollectionMember[]> {
+  return apiRequest<CollectionMember[]>(`/collections/${collectionId}/members`, token);
+}
+
+export async function addCollectionMember(token: string, collectionId: string, req: AddCollectionMemberRequest): Promise<CollectionMember> {
+  return apiRequest<CollectionMember>(`/collections/${collectionId}/members`, token, { method: "POST", body: JSON.stringify(req) });
+}
+
+export async function updateCollectionMemberRole(token: string, collectionId: string, userId: string, role: string): Promise<CollectionMember> {
+  return apiRequest<CollectionMember>(`/collections/${collectionId}/members/${userId}/role`, token, { method: "PUT", body: JSON.stringify({ role }) });
+}
+
+export async function removeCollectionMember(token: string, collectionId: string, userId: string): Promise<void> {
+  return apiRequest<void>(`/collections/${collectionId}/members/${userId}`, token, { method: "DELETE" });
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface CollectionObject {
@@ -495,6 +529,7 @@ export interface ResearchNote {
   parent_id: string | null;
   reply_count: number;
   object_ids: string[];
+  canvas_id: string | null;
   created_at: string;
   updated_at: string;
 }

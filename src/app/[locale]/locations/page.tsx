@@ -35,8 +35,7 @@ function fromLocation(l: Location): FormState {
 
 export default function LocationsPage() {
   const { user, token, isLoading } = useAuth();
-  const { userRole } = useCollection();
-  const canWrite = userRole !== "viewer";
+  const { userRole, canWrite, activeCollection } = useCollection();
   const router = useRouter();
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +53,7 @@ export default function LocationsPage() {
     try { setLocations(await listLocations(token)); }
     catch (e) { setError(e instanceof Error ? e.message : "Failed to load"); }
     finally { setLoading(false); }
-  }, [token]);
+  }, [token, activeCollection?.id]);
 
   useEffect(() => { if (token) load(); }, [load, token]);
 
