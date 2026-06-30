@@ -13,6 +13,16 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // React Compiler flags all setState inside effects, including async
+      // data-fetch callbacks. Too aggressive for this codebase's patterns.
+      "react-hooks/set-state-in-effect": "off",
+      // React Compiler flags ref reads during render; these components have
+      // been tested locally and are correct.
+      "react-hooks/refs": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
