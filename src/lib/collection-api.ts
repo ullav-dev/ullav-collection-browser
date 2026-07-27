@@ -518,6 +518,10 @@ export interface ResearchFolder {
   created_at: string;
 }
 
+/** Tack's three-tier visibility. `undefined` for locally-stored canvas/IIIF
+ * annotation rows, which have no tack-side visibility tier. */
+export type NoteVisibility = "private" | "team" | "organization";
+
 export interface ResearchNote {
   id: string;
   folder_id: string | null;
@@ -532,6 +536,7 @@ export interface ResearchNote {
   canvas_id: string | null;
   created_at: string;
   updated_at: string;
+  visibility?: NoteVisibility;
 }
 
 export interface ChatSession {
@@ -588,6 +593,9 @@ export const createNote = (
     body?: string | null;
     folder_id?: string | null;
     is_shared?: boolean;
+    /** Takes precedence over is_shared when present -- lets the caller pick
+     * the organization-wide tier is_shared can't express. */
+    visibility?: NoteVisibility;
     object_ids?: string[];
   },
 ): Promise<ResearchNote> =>
@@ -599,9 +607,12 @@ export const getNote = (token: string, id: string): Promise<ResearchNote> =>
 export const updateNote = (
   token: string,
   id: string,
-  body: Partial<Pick<ResearchNote, "title" | "description" | "body" | "folder_id" | "is_shared">>,
+  body: Partial<Pick<ResearchNote, "title" | "description" | "body" | "folder_id" | "is_shared" | "visibility">>,
 ): Promise<ResearchNote> =>
   apiRequest(`/research-notes/${id}`, token, { method: "PUT", body: JSON.stringify(body) });
+
+export const searchNotes = (token: string, q: string): Promise<ResearchNote[]> =>
+  apiRequest(`/research-notes/search?q=${encodeURIComponent(q)}`, token);
 
 export const deleteNote = (token: string, id: string): Promise<void> =>
   apiRequest(`/research-notes/${id}`, token, { method: "DELETE" });
