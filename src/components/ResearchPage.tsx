@@ -6,10 +6,10 @@ import { useLocale } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   listNotes, createNote, updateNote, deleteNote,
-  setNoteFolder, setNoteObjects,
+  setNoteFolder, setNoteObjects, searchNotes,
   listFolders, createFolder, renameFolder, deleteFolder,
   listObjects,
-  type ResearchNote, type ResearchFolder, type CollectionObject,
+  type ResearchNote, type ResearchFolder, type CollectionObject, type NoteVisibility,
 } from "@/lib/collection-api";
 import MarkdownEditor, { MarkdownBody } from "@/components/MarkdownEditor";
 import NoteThread from "@/components/NoteThread";
@@ -36,7 +36,7 @@ interface NoteForm {
   description: string;
   body: string;
   folderId: string | null;
-  isShared: boolean;
+  visibility: NoteVisibility;
   objectIds: string[];
 }
 
@@ -45,7 +45,7 @@ const EMPTY_FORM: NoteForm = {
   description: "",
   body: "",
   folderId: null,
-  isShared: false,
+  visibility: "private",
   objectIds: [],
 };
 
@@ -129,6 +129,13 @@ export default function ResearchPage({ objectId, noteId, isNew }: Props) {
   const [showObjectSearch, setShowObjectSearch] = useState(false);
   const objectSearchRef = useRef<HTMLDivElement>(null);
 
+  // Note body/title search (tack's hybrid search, not the client-side
+  // object-link filter above) -- non-null searchResults means "showing
+  // search results instead of the folder-filtered list".
+  const [noteSearch, setNoteSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<ResearchNote[] | null>(null);
+  const [searching, setSearching] = useState(false);
+
   // ── Load data ─────────────────────────────────────────────────────────────────
 
   const loadNotes = useCallback(async () => {
@@ -202,6 +209,24 @@ export default function ResearchPage({ objectId, noteId, isNew }: Props) {
     return () => clearInterval(id);
   }, [activeFolder, loadNotes, token]);
 
+  // Debounced note search — clears results (falling back to the
+  // folder-filtered list) when the query is empty.
+  useEffect(() => {
+    if (!token || !noteSearch.trim()) {
+      setSearchResults(null);
+      return;
+    }
+    const query = noteSearch.trim();
+    setSearching(true);
+    const timer = setTimeout(() => {
+      searchNotes(token, query)
+        .then((results) => setSearchResults(results))
+        .catch(() => setSearchResults([]))
+        .finally(() => setSearching(false));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [noteSearch, token]);
+
   // Close explore menu on outside click
   useEffect(() => {
     if (!exploreMenuOpen) return;
@@ -231,7 +256,7 @@ export default function ResearchPage({ objectId, noteId, isNew }: Props) {
   // token is non-null beyond this point — narrowed for handler closures
   const tok = token;
   const userId = user.id;
-  const visibleNotes = filterNotes(notes, activeFolder, userId);
+  const visibleNotes = searchResults ?? filterNotes(notes, activeFolder, userId);
 
   // ── Note actions ──────────────────────────────────────────────────────────────
 
@@ -259,7 +284,7 @@ export default function ResearchPage({ objectId, noteId, isNew }: Props) {
       description,
       body,
       folderId: null,
-      isShared: false,
+      visibility: "private",
       objectIds: contextObject ? [contextObject.id] : [],
     });
     setSaveError(null);
@@ -278,7 +303,7 @@ export default function ResearchPage({ objectId, noteId, isNew }: Props) {
       description: note.description ?? "",
       body: note.body ?? "",
       folderId: note.folder_id,
-      isShared: note.is_shared,
+      visibility: note.visibility ?? (note.is_shared ? "team" : "private"),
       objectIds: note.object_ids,
     });
     setSaveError(null);
@@ -303,7 +328,8 @@ export default function ResearchPage({ objectId, noteId, isNew }: Props) {
           description: form.description || null,
           body: form.body || null,
           folder_id: form.folderId,
-          is_shared: form.isShared,
+          is_shared: form.visibility !== "private",
+          visibility: form.visibility,
         });
         // Sync object links if changed
         const prevIds = [...activeNote.object_ids].sort().join(",");
@@ -318,7 +344,8 @@ export default function ResearchPage({ objectId, noteId, isNew }: Props) {
           description: form.description || null,
           body: form.body || null,
           folder_id: form.folderId,
-          is_shared: form.isShared,
+          is_shared: form.visibility !== "private",
+          visibility: form.visibility,
           object_ids: form.objectIds,
         });
       }
@@ -569,6 +596,20 @@ export default function ResearchPage({ objectId, noteId, isNew }: Props) {
             </svg>
             New
           </button>
+        </div>
+
+        {/* Note search — hybrid (lexical + semantic) search over note
+            title/body, backed by tack's GET /search. Distinct from the
+            object-link picker's own client-side filter below. */}
+        <div className="px-3 py-2 border-b border-slate-100 bg-white">
+          <input
+            type="search"
+            value={noteSearch}
+            onChange={(e) => setNoteSearch(e.target.value)}
+            placeholder="Search notes…"
+            className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+          />
+          {searching && <p className="mt-1 text-xs text-slate-400">Searching…</p>}
         </div>
 
         {/* Mobile folder chip strip — visible on < md only */}
@@ -912,17 +953,20 @@ function NotesPanel({
                 ))}
               </select>
             </div>
-            <div className="flex items-center gap-2 pt-7">
-              <input
-                id="is-shared"
-                type="checkbox"
-                checked={form.isShared}
-                onChange={(e) => setForm((f) => ({ ...f, isShared: e.target.checked }))}
-                className="w-4 h-4 rounded text-teal-600 border-slate-300 focus:ring-teal-500"
-              />
-              <label htmlFor="is-shared" className="text-sm text-slate-700 select-none">
-                Share with institution
+            <div className="flex-1 min-w-40">
+              <label htmlFor="note-visibility" className="block text-sm font-medium text-slate-700 mb-1">
+                Visibility
               </label>
+              <select
+                id="note-visibility"
+                value={form.visibility}
+                onChange={(e) => setForm((f) => ({ ...f, visibility: e.target.value as NoteVisibility }))}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              >
+                <option value="private">Only me</option>
+                <option value="team">Share with team</option>
+                <option value="organization">Share with organization</option>
+              </select>
             </div>
           </div>
 
