@@ -58,6 +58,8 @@ export interface UpdateCollectionRequest {
   name: string;
   description?: string;
   is_public?: boolean;
+  /** Reassign the collection to a different team. Omit to leave unchanged. */
+  team_id?: string;
 }
 
 export async function listCollections(token: string): Promise<Collection[]> {

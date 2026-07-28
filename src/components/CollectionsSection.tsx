@@ -110,12 +110,16 @@ function CreateCollectionModal({
 
 // ── Edit collection form ──────────────────────────────────────────────────────
 
+const NIL_TEAM_ID = "00000000-0000-0000-0000-000000000000";
+
 function EditCollectionForm({
   collection,
+  adminTeams,
   onSave,
   onCancel,
 }: {
   collection: Collection;
+  adminTeams: { id: string; name: string }[];
   onSave: () => void;
   onCancel: () => void;
 }) {
@@ -123,8 +127,11 @@ function EditCollectionForm({
   const [name, setName] = useState(collection.name);
   const [description, setDescription] = useState(collection.description ?? "");
   const [isPublic, setIsPublic] = useState(collection.is_public);
+  const [teamId, setTeamId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const unassigned = collection.team_id === NIL_TEAM_ID;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -132,7 +139,12 @@ function EditCollectionForm({
     setSaving(true);
     setError(null);
     try {
-      await updateCollection(token, collection.id, { name, description: description || undefined, is_public: isPublic });
+      await updateCollection(token, collection.id, {
+        name,
+        description: description || undefined,
+        is_public: isPublic,
+        team_id: teamId || undefined,
+      });
       onSave();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save");
@@ -152,6 +164,15 @@ function EditCollectionForm({
         <label className="block text-xs font-medium text-slate-600 mb-1">Description</label>
         <input value={description} onChange={e => setDescription(e.target.value)} className={inputCls} />
       </div>
+      {unassigned && adminTeams.length > 0 && (
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Assign team</label>
+          <select value={teamId} onChange={e => setTeamId(e.target.value)} className={selectCls}>
+            <option value="">— Leave unassigned —</option>
+            {adminTeams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        </div>
+      )}
       <label className="flex items-center gap-2.5 cursor-pointer select-none">
         <input type="checkbox" checked={isPublic} onChange={e => setIsPublic(e.target.checked)} className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
         <span className="text-sm text-slate-700">Public</span>
@@ -193,8 +214,6 @@ function MembersList({
   const [addRole, setAddRole] = useState<"owner" | "curator">("curator");
   const [adding, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const NIL_TEAM_ID = "00000000-0000-0000-0000-000000000000";
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -358,6 +377,7 @@ function CollectionCard({
   teamName,
   canManage,
   isActive,
+  adminTeams,
   onSwitch,
   onChanged,
 }: {
@@ -365,6 +385,7 @@ function CollectionCard({
   teamName: string;
   canManage: boolean;
   isActive: boolean;
+  adminTeams: { id: string; name: string }[];
   onSwitch: () => void;
   onChanged: () => void;
 }) {
@@ -439,6 +460,7 @@ function CollectionCard({
       {editing && (
         <EditCollectionForm
           collection={collection}
+          adminTeams={adminTeams}
           onSave={() => { setEditing(false); onChanged(); }}
           onCancel={() => setEditing(false)}
         />
@@ -471,20 +493,19 @@ function CollectionCard({
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export default function CollectionsSection() {
-  const { token } = useAuth();
-  const { collections, activeCollection, teams, canManageCollection, userRole, switchCollection, refresh } = useCollection();
+  const { token, permissions } = useAuth();
+  const { collections, activeCollection, teams, adminTeams, canManageCollection, switchCollection, refresh } = useCollection();
   const [showCreate, setShowCreate] = useState(false);
+  const adminTeamIds = new Set(adminTeams.map(t => t.id));
 
-  // Teams where the user has admin Cartlann role (can create collections).
-  const adminTeams = teams.filter(t => {
-    // We don't have per-team role here easily — we use userRole which is for the active collection.
-    // Show all teams with admin role by checking the JWT directly.
-    return true; // server will enforce; we just let admins see the option
-  });
+  function canManageCard(c: Collection): boolean {
+    if (activeCollection?.id === c.id) return canManageCollection;
+    if (c.team_id === NIL_TEAM_ID) return permissions.includes("objects:write");
+    return adminTeamIds.has(c.team_id);
+  }
 
   // Group collections by team.
   const teamMap = new Map(teams.map(t => [t.id, t.name]));
-  const NIL_TEAM_ID = "00000000-0000-0000-0000-000000000000";
   teamMap.set(NIL_TEAM_ID, "Default");
 
   if (!token) return null;
@@ -521,11 +542,8 @@ export default function CollectionsSection() {
               key={c.id}
               collection={c}
               teamName={teamMap.get(c.team_id) ?? "Unknown team"}
-              canManage={
-                activeCollection?.id === c.id
-                  ? canManageCollection
-                  : userRole === "admin" // for non-active collections, approximate with team role
-              }
+              canManage={canManageCard(c)}
+              adminTeams={adminTeams}
               isActive={c.id === activeCollection?.id}
               onSwitch={() => switchCollection(c.id)}
               onChanged={refresh}

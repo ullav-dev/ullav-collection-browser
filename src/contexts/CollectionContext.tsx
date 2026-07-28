@@ -41,6 +41,8 @@ interface CollectionContextValue {
   canWrite: boolean;
   collectionMembers: CollectionMember[];
   teams: TeamInfo[];
+  /** Teams where the user holds the Cartlann admin product role — can create collections and claim unassigned ones. */
+  adminTeams: TeamInfo[];
   isLoading: boolean;
   switchCollection: (id: string) => void;
   refresh: () => Promise<void>;
@@ -106,6 +108,7 @@ const CollectionContext = createContext<CollectionContextValue>({
   canWrite: false,
   collectionMembers: [],
   teams: [],
+  adminTeams: [],
   isLoading: true,
   switchCollection: () => {},
   refresh: async () => {},
@@ -218,6 +221,12 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
     ? Object.entries(teamsFromToken(token)).map(([id, t]) => ({ id, name: t.name }))
     : [];
 
+  const adminTeams: TeamInfo[] = token
+    ? Object.entries(teamsFromToken(token))
+        .filter(([, t]) => t.product_roles?.["cartlann"] === "admin")
+        .map(([id, t]) => ({ id, name: t.name }))
+    : [];
+
   const activeTeam: TeamInfo | null =
     activeCollection ? (teams.find((t) => t.id === activeCollection.team_id) ?? null) : null;
 
@@ -233,6 +242,7 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
         canWrite,
         collectionMembers,
         teams,
+        adminTeams,
         isLoading,
         switchCollection,
         refresh,
