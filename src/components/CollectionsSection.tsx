@@ -499,8 +499,13 @@ export default function CollectionsSection() {
   const adminTeamIds = new Set(adminTeams.map(t => t.id));
 
   function canManageCard(c: Collection): boolean {
+    // Unassigned collections: any Cartlann team admin can claim one by
+    // assigning it a team; objects:write holders can also edit it outright.
+    // Mirrors the backend's is_claim carve-out in PUT /collections/:id.
+    if (c.team_id === NIL_TEAM_ID) {
+      return permissions.includes("objects:write") || adminTeamIds.size > 0;
+    }
     if (activeCollection?.id === c.id) return canManageCollection;
-    if (c.team_id === NIL_TEAM_ID) return permissions.includes("objects:write");
     return adminTeamIds.has(c.team_id);
   }
 
