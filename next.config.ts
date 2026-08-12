@@ -13,7 +13,7 @@ const gitSha: string = (() => {
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  transpilePackages: ["@ullav-dev/dam-picker", "mirador", "mirador-annotation-editor"],
+  transpilePackages: ["@ullav-dev/dam-picker", "@ullav-dev/tack-notes", "mirador", "mirador-annotation-editor"],
   allowedDevOrigins: ["192.168.178.63"],
   env: {
     NEXT_PUBLIC_APP_VERSION: appVersion,

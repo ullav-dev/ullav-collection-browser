@@ -1,9 +1,10 @@
 # Stage 1: Install dependencies
 FROM node:22-alpine AS deps
 WORKDIR /app
-COPY package*.json ./
+COPY package*.json .npmrc ./
 COPY packages/dam-picker/package.json ./packages/dam-picker/package.json
-RUN npm install
+RUN --mount=type=secret,id=npm_token \
+    NODE_AUTH_TOKEN=$(cat /run/secrets/npm_token) npm install
 
 # Stage 2: Build
 FROM node:22-alpine AS builder
