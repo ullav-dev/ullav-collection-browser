@@ -8,6 +8,23 @@ const intlMiddleware = createMiddleware(routing);
 function route(request: NextRequest): NextResponse {
   const { pathname, search } = request.nextUrl;
 
+  // Proxy /api/tack/* → tack-server (strips /api/tack prefix). Must come
+  // before /api/dam/* and the generic /api/* rule below -- same same-origin
+  // passthrough pattern as togra/cunav/comad's own /api/tack/* rule. Used
+  // only for the handful of tack-notes features cartlann's own backend
+  // proxy has no reason to wrap (version history, unread tracking, system
+  // principals) -- see lib/tack-notes-adapter.ts. Everything else (note/
+  // folder/reply CRUD) still goes through /api/* → ullav-collection-server,
+  // which adds real cartlann-specific value (object links, collection
+  // scoping, canvas/IIIF annotation merging) tack-server has no way to do
+  // on its own.
+  if (pathname.startsWith("/api/tack/")) {
+    const tackUrl = process.env.TACK_URL ?? "http://localhost:8087";
+    return NextResponse.rewrite(
+      new URL(pathname.slice("/api/tack".length) + search, tackUrl)
+    );
+  }
+
   // Proxy /api/dam/* → ullav-dam-server (strips /api/dam prefix)
   if (pathname.startsWith("/api/dam/")) {
     const damUrl = process.env.DAM_URL ?? "http://localhost:8080";
