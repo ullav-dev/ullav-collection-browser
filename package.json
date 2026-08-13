@@ -1,6 +1,6 @@
 {
   "name": "ullav-collection-browser",
-  "version": "0.1.0",
+  "version": "26.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3007",
@@ -20,7 +20,7 @@
     "@mui/system": "^7.3.11",
     "@types/lodash": "^4.17.24",
     "@types/uuid": "^10.0.0",
-    "@ullav-dev/dam-picker": "file:./packages/dam-picker",
+    "@ullav-dev/dam-picker": "*",
     "@ullav-dev/tack-notes": "*",
     "ai": "^6.0.195",
     "bwip-js": "^4.11.1",
