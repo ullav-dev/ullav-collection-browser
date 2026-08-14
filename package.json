@@ -21,7 +21,7 @@
     "@types/lodash": "^4.17.24",
     "@types/uuid": "^10.0.0",
     "@ullav-dev/dam-picker": "*",
-    "@ullav-dev/tack-notes": "*",
+    "@ullav-dev/tack-notes": "^26.2.3",
     "ai": "^6.0.195",
     "bwip-js": "^4.11.1",
     "i18next": "^26.3.1",

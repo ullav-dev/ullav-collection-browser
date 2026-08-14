@@ -1,9 +1,8 @@
 // Adapts cartlann's own `/research-notes` REST API (ullav-collection-server,
 // see collection-api.ts) to the `TackNotesApi` interface
-// `@ullav-dev/tack-notes`'s components expect, so `TackNoteTree`/
-// `TackNotesPanel`/`TackNoteThread` can be used here exactly as they are in
-// every other app in this migration, with no wire-format changes needed on
-// cartlann's backend.
+// `@ullav-dev/tack-notes`'s components expect, so `TackNotesPanel` can be
+// used here exactly as it is in every other app in this migration, with no
+// wire-format changes needed on cartlann's backend.
 //
 // This is a *hybrid* adapter, not a plain `createTackNotesApi` pointed at
 // cartlann's own base URL, because cartlann's backend proxy does real work
@@ -14,6 +13,10 @@
 // - canvas/IIIF annotation merging (a different content shape entirely,
 //   with no tack equivalent -- see handlers::research_notes's own doc
 //   comment on the Rust side)
+// - a description field and per-note object links, neither of which
+//   tack-server's own Note schema has at all -- carried through the
+//   generic extra/CartlannNote escape hatches @ullav-dev/tack-notes@26.2.2
+//   added specifically for this (see that package's own README).
 //
 // So note/folder/reply CRUD and entity-attached listing route through
 // cartlann's own endpoints (translating shapes both ways). Features that
@@ -27,6 +30,14 @@
 // return everything unfiltered (same as the hand-rolled ResearchPage.tsx
 // this replaces did -- not a new limitation), so `listNotes`/
 // `listNoteFolders` below filter and paginate client-side.
+//
+// Per-user scoping: a *real* folder or "unfiled" is a personal organizing
+// tool in cartlann's model, not a team-shared one -- ResearchPage.tsx's own
+// `filterNotes` always scoped those two views to `n.user_id === userId`
+// (only "All Notes" and the shared-by-* virtual folders ever crossed users).
+// `listNotes`/`listNoteFolders` below reproduce that scoping exactly; it's
+// not something `@ullav-dev/tack-notes` itself has any opinion on (real
+// tack folders are genuinely team-shared), so it lives entirely here.
 
 import {
   createNote as apiCreateNote,
@@ -40,6 +51,7 @@ import {
   listNotes as apiListNotes,
   listObjectNotes as apiListObjectNotes,
   renameFolder as apiRenameFolder,
+  setNoteObjects as apiSetNoteObjects,
   updateNote as apiUpdateNote,
   type ResearchFolder,
   type ResearchNote,
@@ -54,7 +66,27 @@ import {
   type Visibility,
 } from "@ullav-dev/tack-notes";
 
-function toNote(rn: ResearchNote): Note {
+/** `Note`, widened with the cartlann-specific fields `@ullav-dev/tack-notes`
+ * itself has no concept of. Every note this adapter returns is actually one
+ * of these -- host components (`renderDetailBadges`, `renderComposerExtra`,
+ * etc.) can safely cast a `Note` they're handed back to this shape, same
+ * pattern as the package's own README describes for `extra`. */
+export interface CartlannNote extends Note {
+  description: string | null;
+  object_ids: string[];
+  /** Set only for a locally-stored canvas/IIIF annotation row merged into
+   * the same list server-side -- see handlers::research_notes's own doc
+   * comment on the Rust side. */
+  canvas_id: string | null;
+  is_shared: boolean;
+}
+
+/** The reserved `listNotes`/`filterChips` keys this adapter understands,
+ * beyond the folderId/unfiled ones `@ullav-dev/tack-notes` already handles
+ * itself. Mirrors `ResearchPage.tsx`'s old `VirtualFolder` type exactly. */
+export type CartlannFilterKey = "shared-by-me" | "shared-by-others";
+
+function toNote(rn: ResearchNote): CartlannNote {
   return {
     id: rn.id,
     organization_id: "", // unused by any tack-notes component; cartlann's own API doesn't expose it
@@ -69,6 +101,10 @@ function toNote(rn: ResearchNote): Note {
     updated_at: rn.updated_at,
     reply_count: rn.reply_count,
     in_reply_to_version: null,
+    description: rn.description,
+    object_ids: rn.object_ids,
+    canvas_id: rn.canvas_id,
+    is_shared: rn.is_shared,
   };
 }
 
@@ -95,11 +131,11 @@ function paginate<T>(items: T[], limit?: number, offset?: number): { items: T[];
   return { items: page, total, has_more: o + page.length < total };
 }
 
-/** `token` and `teamId` are captured at creation time, matching
- *  `createTackNotesApi`'s own shape -- callers rebuild this per token/team
- *  change (e.g. in a `useMemo`), same as every other app's NotesPanel
+/** `token`/`teamId`/`currentUserId` are captured at creation time, matching
+ *  `createTackNotesApi`'s own shape -- callers rebuild this per token/team/
+ *  user change (e.g. in a `useMemo`), same as every other app's NotesPanel
  *  wrapper does for its own API client. */
-export function createCartlannTackNotesApi(token: string, teamId: string): TackNotesApi {
+export function createCartlannTackNotesApi(token: string, teamId: string, currentUserId: string): TackNotesApi {
   // Pure-tack features cartlann's backend has no reason to wrap -- see this
   // file's own doc comment.
   const direct = createTackNotesApi("/api/tack", token);
@@ -107,11 +143,19 @@ export function createCartlannTackNotesApi(token: string, teamId: string): TackN
   return {
     async listNotes(_teamId, opts) {
       const all = await apiListNotes(token);
-      let filtered = all;
-      if (opts?.unfiled) {
-        filtered = filtered.filter((n) => n.folder_id === null);
+      let filtered: ResearchNote[];
+      if (opts?.filterKey === ("shared-by-me" satisfies CartlannFilterKey)) {
+        filtered = all.filter((n) => n.is_shared && n.user_id === currentUserId);
+      } else if (opts?.filterKey === ("shared-by-others" satisfies CartlannFilterKey)) {
+        filtered = all.filter((n) => n.is_shared && n.user_id !== currentUserId);
+      } else if (opts?.unfiled) {
+        filtered = all.filter((n) => n.folder_id === null && n.user_id === currentUserId);
       } else if (opts?.folderId) {
-        filtered = filtered.filter((n) => n.folder_id === opts.folderId);
+        filtered = all.filter((n) => n.folder_id === opts.folderId && n.user_id === currentUserId);
+      } else {
+        // "all" (or no filter at all) -- every note, matching
+        // ResearchPage.tsx's old `case "all": return notes;`.
+        filtered = all;
       }
       const { items, total, has_more } = paginate(filtered, opts?.limit, opts?.offset);
       const page: NotesPage = { notes: items.map(toNote), total, has_more };
@@ -123,11 +167,14 @@ export function createCartlannTackNotesApi(token: string, teamId: string): TackN
     },
 
     async createNote(payload) {
+      const extra = payload.extra as { description?: string | null; object_ids?: string[] } | undefined;
       const created = await apiCreateNote(token, {
         title: payload.title,
+        description: extra?.description ?? null,
         body: payload.body_markdown,
         folder_id: payload.folder_id ?? null,
         visibility: payload.visibility,
+        object_ids: extra?.object_ids ?? [],
       });
       return toNote(created);
     },
@@ -139,12 +186,18 @@ export function createCartlannTackNotesApi(token: string, teamId: string): TackN
     },
 
     async updateNote(id, payload) {
-      const updated = await apiUpdateNote(token, id, {
+      const extra = payload.extra as { description?: string | null; object_ids?: string[] } | undefined;
+      let updated = await apiUpdateNote(token, id, {
         title: payload.title,
         body: payload.body_markdown,
         visibility: payload.visibility,
         folder_id: payload.folder_id,
+        ...(extra && "description" in extra ? { description: extra.description } : {}),
       });
+      if (extra?.object_ids !== undefined) {
+        await apiSetNoteObjects(token, id, extra.object_ids);
+        updated = { ...updated, object_ids: extra.object_ids };
+      }
       return toNote(updated);
     },
 
@@ -166,7 +219,10 @@ export function createCartlannTackNotesApi(token: string, teamId: string): TackN
       const [folders, notes] = await Promise.all([apiListFolders(token), apiListNotes(token)]);
       const counts = new Map<string, number>();
       for (const n of notes) {
-        if (n.folder_id) counts.set(n.folder_id, (counts.get(n.folder_id) ?? 0) + 1);
+        // Real folders are a personal organizing tool here (see this
+        // file's own doc comment) -- a folder's count/contents are always
+        // scoped to its own owner, same as `listNotes` above.
+        if (n.folder_id && n.user_id === currentUserId) counts.set(n.folder_id, (counts.get(n.folder_id) ?? 0) + 1);
       }
       const { items, total } = paginate(folders, opts?.limit, opts?.offset);
       const page: NoteFoldersPage = {
