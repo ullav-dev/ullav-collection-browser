@@ -345,6 +345,9 @@
     "pagerPageOf": "Page {page} of {total}",
     "chipUnfiled": "Unfiled",
     "chipSharedByMe": "Shared by Me",
-    "chipSharedByOthers": "Shared by Others"
+    "chipSharedByOthers": "Shared by Others",
+    "searchPlaceholder": "Search notes…",
+    "searchNoResults": "No matches",
+    "searchInReply": "In a reply"
   }
 }
