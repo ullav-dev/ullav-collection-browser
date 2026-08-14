@@ -14,6 +14,7 @@ import NoteExtraFields, {
   cartlannDeleteWarning,
   type NoteExtraDraft,
 } from "@/components/notes/CartlannNoteExtra";
+import CartlannNoteSearch from "@/components/notes/CartlannNoteSearch";
 import AiChat from "@/components/AiChat";
 import WikipediaSearch from "@/components/WikipediaSearch";
 import ExplorePanel, { type ExploreSource } from "@/components/ExplorePanel";
@@ -279,12 +280,25 @@ export default function ResearchPage({ objectId, noteId, isNew }: Props) {
             </div>
           )}
         </div>
+
+        {rightPanel === "notes" && (
+          <div className="ml-auto pl-2 py-1.5 shrink-0">
+            <CartlannNoteSearch token={token} onSelectNote={(id) => router.push(`/research?noteId=${id}`)} />
+          </div>
+        )}
       </div>
 
       {/* ── Panel content ─────────────────────────────────────────────────────── */}
       <div className="flex-1 min-h-0 overflow-hidden">
         {rightPanel === "notes" && (
           <TackNotesPanel
+            // Forces a clean remount when noteId changes (a fresh search
+            // result click or "View note" link) -- TackNotesPanel's own
+            // initialSelectedNoteId is consume-once-at-mount by design,
+            // same contract as initialDraft, so jumping to a different
+            // note after it's already mounted needs a real remount, not a
+            // prop update it would otherwise ignore.
+            key={noteId ?? "default"}
             api={api}
             owningService="cartlann"
             entityType="team"

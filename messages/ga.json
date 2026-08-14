@@ -345,6 +345,9 @@
     "pagerPageOf": "Leathanach {page} de {total}",
     "chipUnfiled": "Gan fillteán",
     "chipSharedByMe": "Roinnte agam",
-    "chipSharedByOthers": "Roinnte ag daoine eile"
+    "chipSharedByOthers": "Roinnte ag daoine eile",
+    "searchPlaceholder": "Cuardaigh nótaí…",
+    "searchNoResults": "Gan torthaí",
+    "searchInReply": "I bhfreagra"
   }
 }

@@ -345,6 +345,9 @@
     "pagerPageOf": "Seite {page} von {total}",
     "chipUnfiled": "Ohne Ordner",
     "chipSharedByMe": "Von mir geteilt",
-    "chipSharedByOthers": "Von anderen geteilt"
+    "chipSharedByOthers": "Von anderen geteilt",
+    "searchPlaceholder": "Notizen durchsuchen…",
+    "searchNoResults": "Keine Treffer",
+    "searchInReply": "In einer Antwort"
   }
 }
